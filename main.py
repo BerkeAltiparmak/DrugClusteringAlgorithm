@@ -278,6 +278,37 @@ def compare_clusters_silhoutte(hm, rcutoff_clustered_drugs_list):
     return silhoutte_list
 
 
+def plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs,
+                                     wanted_cluster_length=3, has_outcast_cluster_for_all=False):
+    if has_outcast_cluster_for_all:
+        clustered_drugs = clustered_drugs.copy()[:-1]
+    label_occurrance_map = {}
+    for cluster in clustered_drugs:
+        if len(cluster) >= wanted_cluster_length:
+            hm_cluster, _ = get_repeated_dataset([cluster], hm)
+
+            sns.set(font_scale=0.2)
+            cm = sns.clustermap(hm_cluster, metric="euclidean", method="weighted", cmap="RdBu",
+                                robust='TRUE', dendrogram_ratio=(0.05, 0.1), vmin=0, vmax=1,
+                                figsize=(100, 5), cbar_pos=(0, 0.1, 0.02, 0.3), xticklabels=1)
+            fig = cm._figure
+
+            label_count_map = get_label_count_map(cluster, drug_label_map)
+            most_occurring_label = max(label_count_map, key=label_count_map.get)
+            most_occurring_label_count = label_count_map[most_occurring_label]
+            label_info = str(most_occurring_label) + "-count:" + \
+                         str(most_occurring_label_count) + "_"
+            filename = ""
+            if most_occurring_label not in label_occurrance_map:
+                label_occurrance_map[most_occurring_label] = 1
+                filename = label_info + "cluster_rcutoff_0.6" + ".pdf"
+            else:
+                label_occurrance_map[most_occurring_label] += 1
+                filename = label_info + str(label_occurrance_map[most_occurring_label]) \
+                           + "_cluster_rcutoff_0.6" + ".pdf"
+            fig.savefig("heatmaps/" + filename)
+
+
 if __name__ == '__main__':
     start = timeit.default_timer()
     df = get_df()
@@ -334,3 +365,6 @@ if __name__ == '__main__':
 
     # silhoutte_list = compare_clusters_silhoutte(hm, rcutoff_clustered_drugs_list) #0.5<=r<=0.95, outcast=False
     print('silhoutte comparison ready in ', timeit.default_timer() - start)
+
+    plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs)
+    print('heatmaps of clusters ready in ', timeit.default_timer() - start)
