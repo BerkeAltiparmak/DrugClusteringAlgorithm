@@ -9,7 +9,7 @@ import math
 import weighted_graph_creator as wgc
 import graph_visualization as gv
 from sklearn.mixture import GaussianMixture
-
+from sklearn.metrics import silhouette_score
 
 
 def get_df() -> DataFrame:
@@ -35,7 +35,7 @@ def plot_heatmap(heatmap, xlim=0, ylim=0):
     :param ylim: y axis limit
     :return: the drawing of the heatmap
     """
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots()  # figsize=(x,y)
     sns.set()
     sns.heatmap(heatmap, cmap='RdBu')
 
@@ -80,7 +80,7 @@ def get_useful_data(hm, auc_cutoff=0.5):
     return (new_hm, useful_drugs_list)
 
 
-def get_similarity_labeling_matrix(corr_m, drug_list, r_cutoff=0.7):
+def get_similarity_labeling_matrix(corr_m, drug_list, r_cutoff=0.6):
     initial_cluster = []
     for row_i in corr_m:
         row_i_similardrugs_set = []
@@ -93,9 +93,15 @@ def get_similarity_labeling_matrix(corr_m, drug_list, r_cutoff=0.7):
     return initial_cluster
 
 
-def get_gaussian_mixture_model(drug_lit, k):
-    gmm = GaussianMixture(n_components=k)
-    gmm.fit(drug_lit)
+def get_gaussian_mixture_model(drug_list, k):
+    """
+    Decided not to use this algorithm because it is not the best algorithm to classify drugs into
+    multiple clusters, the reason being the probability of a drug being in a cluster occurred to be
+    either 1 or 0, with no meaningful intermediate values because the data points are not that
+    close to each other and covariance then is calculated to be low.
+    """
+    gmm = GaussianMixture(n_components=k, covariance_type='diag')
+    gmm.fit(drug_list)
     """
     yP = gmm.predict_proba(XB)  # produces probabilities
     # Arbitrary labels with unsupervised clustering may need to be reversed
@@ -117,6 +123,19 @@ def get_similar_drugs(initial_cluster, has_outcast_cluster=False):
         clustered_drugs.append(outcast_cluster)
 
     return clustered_drugs
+
+
+def get_super_clustered_drugs(clustered_drugs):
+    super_clustered_drugs = set()
+    for cluster1 in clustered_drugs:
+        super_cluster = cluster1
+        for cluster2 in clustered_drugs:
+            union_set = set(super_cluster + cluster2)
+            if len(union_set) < len(super_cluster) + len(cluster2):  # if they have shared elements
+                super_cluster = union_set
+        super_clustered_drugs.add(super_cluster)
+
+    return super_clustered_drugs
 
 
 def compare_r_cutoffs(corr_m, drug_list, r_cutoff_list, has_outcast_cluster_for_all=False):
@@ -169,7 +188,7 @@ def get_cluster_labels_entropy(total_nonunique_labels, clustered_drugs):
     H_c = 0
     for cluster in clustered_drugs:
         cluster_prop = len(cluster) / total_nonunique_labels
-        if(cluster_prop <= 0):
+        if (cluster_prop <= 0):
             print("olm")
             print(cluster_prop)
             print(cluster)
@@ -178,7 +197,8 @@ def get_cluster_labels_entropy(total_nonunique_labels, clustered_drugs):
     return H_c
 
 
-def get_mutual_information_between_classes_and_clusters(class_labels_entropy, drug_classes_map, total_nonunique_labels, clustered_drugs):
+def get_mutual_information_between_classes_and_clusters(class_labels_entropy, drug_classes_map, total_nonunique_labels,
+                                                        clustered_drugs):
     H_y_c = 0
     H_y = class_labels_entropy
     for cluster in clustered_drugs:
@@ -201,7 +221,6 @@ def get_mutual_information_between_classes_and_clusters(class_labels_entropy, dr
 def calculate_normalized_mutual_information(drug_label_map, clustered_drugs):
     """
     NMI = 2 * / (class_labels_entropy + cluster_labels_entropy)
-    :param df:
     :param clustered_drugs:
     :return:
     """
@@ -210,7 +229,8 @@ def calculate_normalized_mutual_information(drug_label_map, clustered_drugs):
     total_nonunique_labels = len(all_drugs_in_cluster)
     H_y = get_class_labels_entropy(total_nonunique_labels, label_count_map)
     H_c = get_cluster_labels_entropy(total_nonunique_labels, clustered_drugs)
-    I_y_c = get_mutual_information_between_classes_and_clusters(H_y, drug_label_map, total_nonunique_labels, clustered_drugs)
+    I_y_c = get_mutual_information_between_classes_and_clusters(H_y, drug_label_map, total_nonunique_labels,
+                                                                clustered_drugs)
 
     NMI_y_c = 0
     if H_y * H_c > 0:
@@ -228,13 +248,43 @@ def compare_clusters_normalized_mutual_information(drug_label_map, rcutoff_clust
     return nmi_list
 
 
+def get_repeated_dataset(drug_list_in_cluster, hm):
+    # df = pd.DataFrame(columns=hm.columns)
+    auc_list = []
+    name_list = []
+    cluster_label_list = []
+    cluster_label = 0
+    for cluster in drug_list_in_cluster:
+        for drug in cluster:
+            auc_list.append(hm.loc[drug])
+            name_list.append(hm.loc[drug].name)
+            cluster_label_list.append(cluster_label)
+        cluster_label += 1
+    df = pd.DataFrame(auc_list, columns=hm.columns, index=name_list)
+    return (df, cluster_label_list)
+
+
+def get_silhoutte_scores(cluster_heatmap, cluster_labels):
+    score = silhouette_score(cluster_heatmap, cluster_labels, metric='euclidean')
+    return score
+
+
+def compare_clusters_silhoutte(hm, rcutoff_clustered_drugs_list):
+    silhoutte_list = []
+    for clustered_drugs in rcutoff_clustered_drugs_list:
+        cluster_heatmap, cluster_label_list = get_repeated_dataset(clustered_drugs, hm)
+        silhoutte_list.append(get_silhoutte_scores(cluster_heatmap, cluster_label_list))
+
+    return silhoutte_list
+
+
 if __name__ == '__main__':
     start = timeit.default_timer()
     df = get_df()
     print('dataframe in ', timeit.default_timer() - start)
 
     heatmap = pd.pivot_table(df, values='auc', index=['name'], columns='ccle_name')
-    hm, useful_drug_list = get_useful_data(heatmap, 1)  # 1 for including everything
+    hm, useful_drug_list = get_useful_data(heatmap, 0.5)  # 1 for including everything
     hm.fillna(0.5, inplace=True)
     print('heatmap ready in ', timeit.default_timer() - start)
     # print(hm)
@@ -247,19 +297,21 @@ if __name__ == '__main__':
     print('correlation matrix ready in ', timeit.default_timer() - start)
 
     initial_cluster = get_similarity_labeling_matrix(corr_m, useful_drug_list, 0.6)
-    clustered_drugs = get_similar_drugs(initial_cluster, has_outcast_cluster=True)
+    clustered_drugs = get_similar_drugs(initial_cluster, has_outcast_cluster=False)
     print('single correlation data ready in ', timeit.default_timer() - start)
 
-    r_cutoff_list = np.arange(0, 1, 0.05)
+    r_cutoff_list = np.arange(0.5, 0.95, 0.05)
     num_sets, total_drugs, rcutoff_clustered_drugs_list = compare_r_cutoffs(
-        corr_m, useful_drug_list, r_cutoff_list, has_outcast_cluster_for_all=True)
+        corr_m, useful_drug_list, r_cutoff_list, has_outcast_cluster_for_all=False)
     print('multiple correlation data ready in ', timeit.default_timer() - start)
     # plot_comparison(r_cutoff_list, np.divide(total_drugs, num_sets))
 
-    #drug_label_map = get_drug_label_map(df, useful_drug_list)
-    #nmi_list = compare_clusters_normalized_mutual_information(drug_label_map, rcutoff_clustered_drugs_list)
-    #plot_comparison(r_cutoff_list, nmi_list)
-    #print('nmi comparison ready in ', timeit.default_timer() - start)
+    drug_label_map = get_drug_label_map(df, useful_drug_list)
+    # nmi_list = compare_clusters_normalized_mutual_information(drug_label_map, rcutoff_clustered_drugs_list)
+    # plot_comparison(r_cutoff_list, nmi_list)
+    # print('nmi comparison ready in ', timeit.default_timer() - start)
+
+    # gmm = get_gaussian_mixture_model(hm, 30)
 
     """
     cluster_graph = wgc.get_weighted_graph_from_clusters(clustered_drugs, has_outcast_cluster=True)
@@ -280,4 +332,5 @@ if __name__ == '__main__':
         cluster_length_list.append(sum_of_drugs_in_c)
     """
 
-
+    # silhoutte_list = compare_clusters_silhoutte(hm, rcutoff_clustered_drugs_list) #0.5<=r<=0.95, outcast=False
+    print('silhoutte comparison ready in ', timeit.default_timer() - start)
