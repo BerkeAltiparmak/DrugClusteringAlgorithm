@@ -5,11 +5,12 @@ import seaborn as sns
 import matplotlib.pylab as plt
 import timeit
 import math
+from sklearn.mixture import GaussianMixture
+from sklearn.metrics import silhouette_score
+from scipy import stats
 
 import weighted_graph_creator as wgc
 import graph_visualization as gv
-from sklearn.mixture import GaussianMixture
-from sklearn.metrics import silhouette_score
 
 
 def get_df() -> DataFrame:
@@ -114,8 +115,9 @@ def get_similar_drugs(initial_cluster, has_outcast_cluster=False):
     clustered_drugs = []
     outcast_cluster = []
     for label in initial_cluster:
-        if len(label) > 1 and label not in clustered_drugs:
-            clustered_drugs.append(label)
+        sorted_label = sorted(label)  # to check uniqueness in the list
+        if len(label) > 1 and sorted_label not in clustered_drugs:
+            clustered_drugs.append(sorted_label)
         elif len(label) == 1 and has_outcast_cluster:
             outcast_cluster.extend(label)
 
@@ -126,16 +128,24 @@ def get_similar_drugs(initial_cluster, has_outcast_cluster=False):
 
 
 def get_super_clustered_drugs(clustered_drugs):
-    super_clustered_drugs = set()
+    super_clustered_drugs = []
     for cluster1 in clustered_drugs:
         super_cluster = cluster1
-        for cluster2 in clustered_drugs:
+        i = 0
+        while i < len(clustered_drugs):
+            cluster2 = clustered_drugs[i]
+            i += 1
             union_set = set(super_cluster + cluster2)
-            if len(union_set) < len(super_cluster) + len(cluster2):  # if they have shared elements
-                super_cluster = union_set
-        super_clustered_drugs.add(super_cluster)
+            union_list = list(union_set)
 
-    return super_clustered_drugs
+            # if they have shared elements but one set is not the other set's subset
+            if len(union_list) < len(super_cluster) + len(cluster2) and \
+                    not (set(cluster2).issubset(set(super_cluster))):
+                super_cluster = union_list
+                i = 0
+        super_clustered_drugs.append(super_cluster)
+
+    return get_similar_drugs(super_clustered_drugs, False)
 
 
 def compare_r_cutoffs(corr_m, drug_list, r_cutoff_list, has_outcast_cluster_for_all=False):
@@ -278,7 +288,8 @@ def compare_clusters_silhoutte(hm, rcutoff_clustered_drugs_list):
     return silhoutte_list
 
 
-def plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs,
+def plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs, path="heatmaps/",
+                                     want_super_clustered_drugs=False,
                                      wanted_cluster_length=3, has_outcast_cluster_for_all=False):
     if has_outcast_cluster_for_all:
         clustered_drugs = clustered_drugs.copy()[:-1]
@@ -290,13 +301,14 @@ def plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs,
             sns.set(font_scale=0.2)
             cm = sns.clustermap(hm_cluster, metric="euclidean", method="weighted", cmap="RdBu",
                                 robust='TRUE', dendrogram_ratio=(0.05, 0.1), vmin=0, vmax=1,
-                                figsize=(100, 5), cbar_pos=(0, 0.1, 0.02, 0.3), xticklabels=1)
+                                xticklabels=1, yticklabels=1, figsize=(100, 5),
+                                cbar_pos=(0, 0.1, 0.02, 0.3))
             fig = cm._figure
 
             label_count_map = get_label_count_map(cluster, drug_label_map)
             most_occurring_label = max(label_count_map, key=label_count_map.get)
             most_occurring_label_count = label_count_map[most_occurring_label]
-            label_info = str(most_occurring_label) + "-count:" + \
+            label_info = str(most_occurring_label) + "-count-" + \
                          str(most_occurring_label_count) + "_"
             filename = ""
             if most_occurring_label not in label_occurrance_map:
@@ -306,7 +318,13 @@ def plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs,
                 label_occurrance_map[most_occurring_label] += 1
                 filename = label_info + str(label_occurrance_map[most_occurring_label]) \
                            + "_cluster_rcutoff_0.6" + ".pdf"
-            fig.savefig("heatmaps/" + filename)
+            fig.savefig(path + filename)
+    if want_super_clustered_drugs:
+        plot_heatmaps_of_wanted_clusters(hm, drug_label_map,
+                                         get_super_clustered_drugs(clustered_drugs),
+                                         path=path+"AAsuperclusters/",
+                                         want_super_clustered_drugs=False,
+                                         has_outcast_cluster_for_all=False)
 
 
 if __name__ == '__main__':
@@ -322,7 +340,9 @@ if __name__ == '__main__':
     # kmeans = get_clusters(heatmap, 5)
     # draw_heatmap(hm)
 
-    corr_m = np.corrcoef(hm)
+    corr_m = np.corrcoef(hm)  # get pearson correlation matrix
+
+
     # all_r_values_for_histogram = [item for sublist in corr_m for item in sublist]
     # plot_histogram(flat_list)
     print('correlation matrix ready in ', timeit.default_timer() - start)
@@ -366,5 +386,5 @@ if __name__ == '__main__':
     # silhoutte_list = compare_clusters_silhoutte(hm, rcutoff_clustered_drugs_list) #0.5<=r<=0.95, outcast=False
     print('silhoutte comparison ready in ', timeit.default_timer() - start)
 
-    plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs)
+    #plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs)
     print('heatmaps of clusters ready in ', timeit.default_timer() - start)
