@@ -274,8 +274,8 @@ def get_repeated_dataset(drug_list_in_cluster, hm):
     return (df, cluster_label_list)
 
 
-def get_silhoutte_scores(cluster_heatmap, cluster_labels):
-    score = silhouette_score(cluster_heatmap, cluster_labels, metric='euclidean')
+def get_silhoutte_scores(cluster_heatmap, cluster_label_list):
+    score = silhouette_score(cluster_heatmap, cluster_label_list, metric='euclidean')
     return score
 
 
@@ -288,8 +288,29 @@ def compare_clusters_silhoutte(hm, rcutoff_clustered_drugs_list):
     return silhoutte_list
 
 
+def get_elbow_score(hm, clustered_drugs):
+    curr_wss = 0
+    for cluster in clustered_drugs:
+        cluster_heatmap, _ = get_repeated_dataset([cluster], hm)
+        mean_cell_profile = np.array(cluster_heatmap.mean(axis=0))
+        for drug in cluster:
+            drug_cell_profile = np.array(cluster_heatmap.loc[drug])
+            curr_wss += np.linalg.norm(mean_cell_profile - drug_cell_profile) ** 2
+    return curr_wss
+
+
+def compare_clusters_elbow(hm, rcutoff_clustered_drugs_list):
+    elbow_list = []
+    for clustered_drugs in rcutoff_clustered_drugs_list:
+        elbow_list.append(get_elbow_score(hm, clustered_drugs))
+
+    return elbow_list
+
+
+
+
 def plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs, path="heatmaps/",
-                                     want_super_clustered_drugs=False,
+                                     want_super_clustered_drugs=True,
                                      wanted_cluster_length=3, has_outcast_cluster_for_all=False):
     if has_outcast_cluster_for_all:
         clustered_drugs = clustered_drugs.copy()[:-1]
@@ -342,7 +363,6 @@ if __name__ == '__main__':
 
     corr_m = np.corrcoef(hm)  # get pearson correlation matrix
 
-
     # all_r_values_for_histogram = [item for sublist in corr_m for item in sublist]
     # plot_histogram(flat_list)
     print('correlation matrix ready in ', timeit.default_timer() - start)
@@ -351,7 +371,7 @@ if __name__ == '__main__':
     clustered_drugs = get_similar_drugs(initial_cluster, has_outcast_cluster=False)
     print('single correlation data ready in ', timeit.default_timer() - start)
 
-    r_cutoff_list = np.arange(0.5, 0.95, 0.05)
+    r_cutoff_list = np.arange(0.1, 0.95, 0.5)
     num_sets, total_drugs, rcutoff_clustered_drugs_list = compare_r_cutoffs(
         corr_m, useful_drug_list, r_cutoff_list, has_outcast_cluster_for_all=False)
     print('multiple correlation data ready in ', timeit.default_timer() - start)
@@ -383,8 +403,20 @@ if __name__ == '__main__':
         cluster_length_list.append(sum_of_drugs_in_c)
     """
 
-    # silhoutte_list = compare_clusters_silhoutte(hm, rcutoff_clustered_drugs_list) #0.5<=r<=0.95, outcast=False
+
+    """
+    r_cutoff_list = np.arange(0.3, 0.9, 0.1)
+    num_sets, total_drugs, rcutoff_clustered_drugs_list = compare_r_cutoffs(
+    corr_m, useful_drug_list, r_cutoff_list, has_outcast_cluster_for_all=False)
+    """
+
+    # silhoutte_list = compare_clusters_silhoutte(hm, rcutoff_clustered_drugs_list) #0.5<=r<=0.95, outcast=False #0.5<=r<=0.95, outcast=False
+    # plt.plot(r_cutoff_list, silhoutte_list)
     print('silhoutte comparison ready in ', timeit.default_timer() - start)
 
-    #plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs)
+    # elbow_list = compare_clusters_elbow(hm, rcutoff_clustered_drugs_list) #0.5<=r<=0.95, outcast=False #0.5<=r<=0.95, outcast=False
+    # plt.plot(r_cutoff_list, elbow_list)
+    print('elbow comparison ready in ', timeit.default_timer() - start)
+
+    #plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs, path="heatmaps1/")
     print('heatmaps of clusters ready in ', timeit.default_timer() - start)
