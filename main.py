@@ -8,6 +8,9 @@ import math
 from sklearn.mixture import GaussianMixture
 from sklearn.metrics import silhouette_score
 from scipy import stats
+import json
+import markov_clustering as mcl
+import networkx as nx
 
 import weighted_graph_creator as wgc
 import graph_visualization as gv
@@ -83,15 +86,21 @@ def get_useful_data(hm, auc_cutoff=0.5):
 
 def get_similarity_labeling_matrix(corr_m, drug_list, r_cutoff=0.6):
     initial_cluster = []
+    modified_similarity_matrix = []
     for row_i in corr_m:
         row_i_similardrugs_set = []
+        row_i_similarscore_set = []
         for drug_j_index in range(0, len(row_i)):
             drug_j_similarity_with_drug_i = row_i[drug_j_index]
             if drug_j_similarity_with_drug_i >= r_cutoff:
                 row_i_similardrugs_set.append(drug_list[drug_j_index])
+                row_i_similarscore_set.append(drug_j_similarity_with_drug_i)
+            else:
+                row_i_similarscore_set.append(0)
         initial_cluster.append(row_i_similardrugs_set)
+        modified_similarity_matrix.append(row_i_similarscore_set)
 
-    return initial_cluster
+    return (initial_cluster, np.array(modified_similarity_matrix))
 
 
 def get_gaussian_mixture_model(drug_list, k):
@@ -153,7 +162,7 @@ def compare_r_cutoffs(corr_m, drug_list, r_cutoff_list, has_outcast_cluster_for_
     total_drugs_list = []
     rcutoff_clustered_drugs_list = []
     for r_cutoff in r_cutoff_list:
-        initial_cluster = get_similarity_labeling_matrix(corr_m, drug_list, r_cutoff)
+        initial_cluster, _ = get_similarity_labeling_matrix(corr_m, drug_list, r_cutoff)
         clustered_drugs = get_similar_drugs(initial_cluster, has_outcast_cluster=has_outcast_cluster_for_all)
         num_sets = len(clustered_drugs)
         total_drugs = len(set([item for sublist in clustered_drugs for item in sublist]))
@@ -307,8 +316,6 @@ def compare_clusters_elbow(hm, rcutoff_clustered_drugs_list):
     return elbow_list
 
 
-
-
 def plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs, path="heatmaps/",
                                      want_super_clustered_drugs=True,
                                      wanted_cluster_length=3, has_outcast_cluster_for_all=False):
@@ -343,41 +350,62 @@ def plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs, path="
     if want_super_clustered_drugs:
         plot_heatmaps_of_wanted_clusters(hm, drug_label_map,
                                          get_super_clustered_drugs(clustered_drugs),
-                                         path=path+"AAsuperclusters/",
+                                         path=path + "AAsuperclusters/",
                                          want_super_clustered_drugs=False,
                                          has_outcast_cluster_for_all=False)
+
+
 def get_levenshtein_distance_of_lists(list1, list2):
+    list1_has = []
+    intersection = []
+    list2_has = []
     distance = 0
     for e1 in list1:
         if e1 not in list2:
             distance += 1
+            list1_has.append(e1)
+        else:
+            intersection.append(e1)
     for e2 in list2:
         if e2 not in list1:
             distance += 1
+            list2_has.append(e2)
 
-    return distance
+    return (distance, list1_has, intersection, list2_has)
 
 
-def compare_superclusters(superclusters1, superclusters2):
+def compare_superclusters(superclusters1, superclusters2, pearson_filename_list, spearman_filename_list):
     comparison_array = []
+    difference_map = {}
     for scluster1 in superclusters1:
         comparison_for_scluster1 = []
         for scluster2 in superclusters2:
-            comparison_btwn_scluster1_scluster2 = get_levenshtein_distance_of_lists(
-                scluster1, scluster2) / (len(scluster1) + len(scluster2))
-            comparison_for_scluster1.append(comparison_btwn_scluster1_scluster2)
+            comparison_score, pearson_has, intersection, spearman_has = \
+                get_levenshtein_distance_of_lists(scluster1, scluster2)
+            comparison_score = comparison_score / (len(scluster1) + len(scluster2))
+            comparison_for_scluster1.append(comparison_score)
+            if comparison_score < 1:
+                map_name = pearson_filename_list[superclusters1.index(scluster1)] + "__VS__" + \
+                           spearman_filename_list[superclusters2.index(scluster2)]
+                difference_map[map_name] = \
+                    {"Pearson exclusive": pearson_has,
+                     "Spearman exclusive": spearman_has,
+                     "Intersection": intersection}
+
         comparison_array.append(comparison_for_scluster1)
 
-    return comparison_array
+    comparison_df = pd.DataFrame(comparison_array, columns=spearman_filename_list, index=pearson_filename_list)
+
+    return comparison_df, difference_map
 
 
 def temp(hm, drug_label_map, clustered_drugs, path="heatmaps/",
-                                     want_super_clustered_drugs=True,
-                                     wanted_cluster_length=3, has_outcast_cluster_for_all=False):
+         want_super_clustered_drugs=True,
+         wanted_cluster_length=3, has_outcast_cluster_for_all=False):
     if has_outcast_cluster_for_all:
         clustered_drugs = clustered_drugs.copy()[:-1]
     label_occurrance_map = {}
-    filename_list=[]
+    filename_list = []
     for cluster in clustered_drugs:
         if len(cluster) >= wanted_cluster_length:
             hm_cluster, _ = get_repeated_dataset([cluster], hm)
@@ -397,6 +425,20 @@ def temp(hm, drug_label_map, clustered_drugs, path="heatmaps/",
                            + "_cluster_rcutoff_0.6" + ".pdf"
             filename_list.append(filename)
     return filename_list
+
+
+def get_markov_clusters(modified_similarity_matrix, hm):
+    result = mcl.run_mcl(modified_similarity_matrix)
+    clusters = mcl.get_clusters(modified_similarity_matrix)
+
+    mcl_cluster_index_list = []
+    mcl_cluster_list = []
+    for c in clusters:
+        index_list = list(c)
+        mcl_cluster_index_list.append(index_list)
+        mcl_cluster_list.append(list(hm.iloc[index_list].index))
+
+    return (mcl_cluster_list, mcl_cluster_index_list)
 
 
 if __name__ == '__main__':
@@ -419,7 +461,7 @@ if __name__ == '__main__':
     # plot_histogram(flat_list)
     print('correlation matrix ready in ', timeit.default_timer() - start)
 
-    initial_cluster = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
+    initial_cluster, modified_similarity_matrix = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
     clustered_drugs = get_similar_drugs(initial_cluster, has_outcast_cluster=False)
     print('single correlation data ready in ', timeit.default_timer() - start)
 
@@ -455,7 +497,6 @@ if __name__ == '__main__':
         cluster_length_list.append(sum_of_drugs_in_c)
     """
 
-
     """
     r_cutoff_list = np.arange(0.3, 0.9, 0.1)
     num_sets, total_drugs, rcutoff_clustered_drugs_list = compare_r_cutoffs(
@@ -470,12 +511,13 @@ if __name__ == '__main__':
     # plt.plot(r_cutoff_list, elbow_list)
     print('elbow comparison ready in ', timeit.default_timer() - start)
 
-    #plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs, path="heatmaps1/")
+    # plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs, path="heatmaps1/")
     print('heatmaps of clusters ready in ', timeit.default_timer() - start)
 
-    initial_cluster = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
+    """
+    initial_cluster, _ = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
     clustered_drugs_pearson = get_similar_drugs(initial_cluster, has_outcast_cluster=False)
-    initial_cluster = get_similarity_labeling_matrix(corr_m_spearman, useful_drug_list, 0.6)
+    initial_cluster, _ = get_similarity_labeling_matrix(corr_m_spearman, useful_drug_list, 0.6)
     clustered_drugs_spearman = get_similar_drugs(initial_cluster, has_outcast_cluster=False)
     superclusters_pearson = get_super_clustered_drugs(clustered_drugs_pearson)
     superclusters_spearman = get_super_clustered_drugs(clustered_drugs_spearman)
@@ -485,5 +527,12 @@ if __name__ == '__main__':
     spearman_filename_list = temp(hm, drug_label_map, superclusters_spearman, path="heatmaps_spearman/",
                                   want_super_clustered_drugs=False,
                                   wanted_cluster_length=3, has_outcast_cluster_for_all=False)
-    supercluster_comparison = compare_superclusters(superclusters_pearson, superclusters_spearman)
-    supercomp_df = pd.DataFrame(supercluster_comparison, columns=spearman_filename_list, index=pearson_filename_list)
+    supercluster_comparison, supercluster_difference = \
+        compare_superclusters(superclusters_pearson, superclusters_spearman,
+                                                    pearson_filename_list, spearman_filename_list)
+    """
+
+    mcl_cluster_list, _ = get_markov_clusters(modified_similarity_matrix, hm)
+    mcl_super_cluster = get_super_clustered_drugs(mcl_cluster_list)
+
+
