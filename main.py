@@ -427,9 +427,9 @@ def temp(hm, drug_label_map, clustered_drugs, path="heatmaps/",
     return filename_list
 
 
-def get_markov_clusters(modified_similarity_matrix, hm):
-    result = mcl.run_mcl(modified_similarity_matrix)
-    clusters = mcl.get_clusters(modified_similarity_matrix)
+def get_markov_clusters(similarity_matrix, hm, inflation=2, expansion=2):
+    result = mcl.run_mcl(similarity_matrix, inflation=inflation, expansion=expansion)
+    clusters = mcl.get_clusters(similarity_matrix)
 
     mcl_cluster_index_list = []
     mcl_cluster_list = []
@@ -533,6 +533,6 @@ if __name__ == '__main__':
     """
 
     mcl_cluster_list, _ = get_markov_clusters(modified_similarity_matrix, hm)
-    mcl_super_cluster = get_super_clustered_drugs(mcl_cluster_list)
+    mcl_supercluster = get_super_clustered_drugs(mcl_cluster_list)
 
 
