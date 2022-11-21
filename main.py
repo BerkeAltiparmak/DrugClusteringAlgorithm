@@ -12,6 +12,7 @@ from scipy import stats
 import json
 import markov_clustering as mcl
 import networkx as nx
+from sklearn.decomposition import PCA
 
 import weighted_graph_creator as wgc
 import graph_visualization as gv
@@ -432,7 +433,19 @@ def convert_to_markov_matrix(similarity_matrix):
     return normalize(similarity_matrix, norm="l1", axis=0)
 
 
-def get_markov_clusters(similarity_matrix, hm, inflation=2, expansion=2):
+def inflate(matrix, power):
+    """
+    Apply cluster inflation to the given matrix by raising
+    each element to the given power.
+
+    :param matrix: The matrix to be inflated
+    :param power: Cluster inflation parameter
+    :returns: The inflated matrix
+    """
+    return normalize(np.power(matrix, power))
+
+
+def get_markov_clusters(similarity_matrix, hm, inflation=2.0, expansion=2):
     result = mcl.run_mcl(similarity_matrix, inflation=inflation, expansion=expansion)
     clusters = mcl.get_clusters(similarity_matrix)
 
@@ -540,3 +553,14 @@ if __name__ == '__main__':
     markov_matrix = convert_to_markov_matrix(modified_similarity_matrix)
     mcl_cluster_list, _ = get_markov_clusters(markov_matrix, hm)
     mcl_supercluster = get_super_clustered_drugs(mcl_cluster_list)
+
+    id_list = []
+    for inflation in [i / 10 for i in range(15, 26)]:
+        clusters, _ = get_markov_clusters(markov_matrix, hm, inflation=inflation)
+        #Q = mcl.modularity(matrix=result, clusters=clusters)
+        id = []
+        for c in clusters:
+            id.append(len(c))
+        id_list.append(id)
+        #print("inflation:", inflation, "modularity:", Q)
+    #mcl.draw_graph(inflated_markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
