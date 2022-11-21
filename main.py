@@ -7,6 +7,7 @@ import timeit
 import math
 from sklearn.mixture import GaussianMixture
 from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import normalize
 from scipy import stats
 import json
 import markov_clustering as mcl
@@ -427,6 +428,10 @@ def temp(hm, drug_label_map, clustered_drugs, path="heatmaps/",
     return filename_list
 
 
+def convert_to_markov_matrix(similarity_matrix):
+    return normalize(similarity_matrix, norm="l1", axis=0)
+
+
 def get_markov_clusters(similarity_matrix, hm, inflation=2, expansion=2):
     result = mcl.run_mcl(similarity_matrix, inflation=inflation, expansion=expansion)
     clusters = mcl.get_clusters(similarity_matrix)
@@ -532,7 +537,6 @@ if __name__ == '__main__':
                                                     pearson_filename_list, spearman_filename_list)
     """
 
-    mcl_cluster_list, _ = get_markov_clusters(modified_similarity_matrix, hm)
+    markov_matrix = convert_to_markov_matrix(modified_similarity_matrix)
+    mcl_cluster_list, _ = get_markov_clusters(markov_matrix, hm)
     mcl_supercluster = get_super_clustered_drugs(mcl_cluster_list)
-
-
