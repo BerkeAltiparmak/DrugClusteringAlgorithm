@@ -445,8 +445,8 @@ def inflate(matrix, power):
     return normalize(np.power(matrix, power))
 
 
-def get_markov_clusters(similarity_matrix, hm, inflation=2.0, expansion=2):
-    result = mcl.run_mcl(similarity_matrix, inflation=inflation, expansion=expansion)
+def get_markov_clusters(similarity_matrix, hm, inflation=2.0, expansion=2, pruning_threshold=0.001):
+    result = mcl.run_mcl(similarity_matrix, inflation=inflation, expansion=expansion, pruning_threshold=pruning_threshold)
     clusters = mcl.get_clusters(similarity_matrix)
 
     mcl_cluster_index_list = []
@@ -457,6 +457,11 @@ def get_markov_clusters(similarity_matrix, hm, inflation=2.0, expansion=2):
         mcl_cluster_list.append(list(hm.iloc[index_list].index))
 
     return (mcl_cluster_list, mcl_cluster_index_list)
+
+
+def get_2d_coordinates_PCA(similarity_matrix):
+    pca = PCA(n_components=2)
+    return pca.fit_transform(similarity_matrix)
 
 
 if __name__ == '__main__':
@@ -550,9 +555,13 @@ if __name__ == '__main__':
                                                     pearson_filename_list, spearman_filename_list)
     """
 
-    markov_matrix = convert_to_markov_matrix(modified_similarity_matrix)
+    #markov_matrix = convert_to_markov_matrix(modified_similarity_matrix)
+    markov_matrix = inflate(modified_similarity_matrix, 2)
     mcl_cluster_list, _ = get_markov_clusters(markov_matrix, hm)
     mcl_supercluster = get_super_clustered_drugs(mcl_cluster_list)
+
+    positions = get_2d_coordinates_PCA(modified_similarity_matrix)
+    mcl.draw_graph(markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
 
     id_list = []
     for inflation in [i / 10 for i in range(15, 26)]:
@@ -561,6 +570,14 @@ if __name__ == '__main__':
         id = []
         for c in clusters:
             id.append(len(c))
+        id_list.append(id)
+
+    for threshold in [10 ** (-i) for i in range(1, 6)]:
+        clusters, _ = get_markov_clusters(markov_matrix, hm, pruning_threshold=threshold)
+        # Q = mcl.modularity(matrix=result, clusters=clusters)
+        id = []
+        for c in clusters:
+            id.append(c)
         id_list.append(id)
         #print("inflation:", inflation, "modularity:", Q)
     #mcl.draw_graph(inflated_markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
