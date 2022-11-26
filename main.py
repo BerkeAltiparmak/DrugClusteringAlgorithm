@@ -447,7 +447,7 @@ def inflate(matrix, power):
 
 def get_markov_clusters(similarity_matrix, hm, inflation=2.0, expansion=2, pruning_threshold=0.001):
     result = mcl.run_mcl(similarity_matrix, inflation=inflation, expansion=expansion, pruning_threshold=pruning_threshold)
-    clusters = mcl.get_clusters(similarity_matrix)
+    clusters = mcl.get_clusters(result)
 
     mcl_cluster_index_list = []
     mcl_cluster_list = []
@@ -554,30 +554,33 @@ if __name__ == '__main__':
         compare_superclusters(superclusters_pearson, superclusters_spearman,
                                                     pearson_filename_list, spearman_filename_list)
     """
+    """
+        initial_cluster, _ = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
+        clustered_drugs_pearson = get_similar_drugs(initial_cluster, has_outcast_cluster=False)
+        superclusters_pearson = get_super_clustered_drugs(clustered_drugs_pearson)
+        pearson_filename_list = temp(hm, drug_label_map, superclusters_pearson, path="heatmaps_pearson/",
+                                     want_super_clustered_drugs=False,
+                                     wanted_cluster_length=3, has_outcast_cluster_for_all=False)
+        mcl_filename_list = temp(hm, drug_label_map, mcl_supercluster, path="heatmaps_mcl/",
+                                      want_super_clustered_drugs=False,
+                                      wanted_cluster_length=3, has_outcast_cluster_for_all=False)
+        supercluster_comparison, supercluster_difference = \
+            compare_superclusters(superclusters_pearson, mcl_supercluster,
+                                                        pearson_filename_list, mcl_filename_list)
+        """
+    """
+    with open("pearson_vs_mcl_0.6-r-cutoff.json", "w") as outfile:
+        json.dump(supercluster_difference, outfile, indent=4, sort_keys=False)
+    """
 
     #markov_matrix = convert_to_markov_matrix(modified_similarity_matrix)
-    markov_matrix = inflate(modified_similarity_matrix, 2)
+    #markov_matrix = inflate(modified_similarity_matrix, 2)
+    markov_matrix = modified_similarity_matrix
     mcl_cluster_list, _ = get_markov_clusters(markov_matrix, hm)
     mcl_supercluster = get_super_clustered_drugs(mcl_cluster_list)
 
-    positions = get_2d_coordinates_PCA(modified_similarity_matrix)
-    mcl.draw_graph(markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
+    #positions = get_2d_coordinates_PCA(modified_similarity_matrix)
+    #mcl.draw_graph(markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
 
-    id_list = []
-    for inflation in [i / 10 for i in range(15, 26)]:
-        clusters, _ = get_markov_clusters(markov_matrix, hm, inflation=inflation)
-        #Q = mcl.modularity(matrix=result, clusters=clusters)
-        id = []
-        for c in clusters:
-            id.append(len(c))
-        id_list.append(id)
-
-    for threshold in [10 ** (-i) for i in range(1, 6)]:
-        clusters, _ = get_markov_clusters(markov_matrix, hm, pruning_threshold=threshold)
-        # Q = mcl.modularity(matrix=result, clusters=clusters)
-        id = []
-        for c in clusters:
-            id.append(c)
-        id_list.append(id)
         #print("inflation:", inflation, "modularity:", Q)
     #mcl.draw_graph(inflated_markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")

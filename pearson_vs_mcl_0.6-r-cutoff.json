@@ -1,0 +1,353 @@
+{
+    "topoisomerase inhibitor-count-5_cluster_rcutoff_0.6.pdf__VS__topoisomerase inhibitor-count-5_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "10-hydroxycamptothecin",
+            "genz-644282",
+            "irinotecan",
+            "rubitecan",
+            "talazoparib",
+            "topotecan"
+        ]
+    },
+    "acetylcholine receptor antagonist-count-1_cluster_rcutoff_0.6.pdf__VS__acetylcholine receptor antagonist-count-1_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "5-hydroxymethyl-tolterodine",
+            "7-hydroxystaurosporine",
+            "CH5132799",
+            "R306465",
+            "SR-33805",
+            "Y-27632",
+            "lestaurtinib",
+            "proflavine-hemisulfate"
+        ]
+    },
+    "tubulin polymerization inhibitor-count-16_cluster_rcutoff_0.6.pdf__VS__tubulin polymerization inhibitor-count-5_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [
+            "BI-2536",
+            "BNC105",
+            "CYT-997",
+            "GSK461364",
+            "KX2-391",
+            "cephalomannine",
+            "combretastatin-A-4",
+            "docetaxel",
+            "dolastatin-10",
+            "ispinesib",
+            "litronesib",
+            "paclitaxel",
+            "podophyllotoxin",
+            "rigosertib",
+            "taltobulin",
+            "verubulin",
+            "vinblastine",
+            "vincristine",
+            "vindesine",
+            "vinflunine",
+            "vinorelbine",
+            "volasertib"
+        ],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "ABT-751",
+            "JK-184",
+            "cabazitaxel",
+            "epothilone-a",
+            "epothilone-b",
+            "indibulin",
+            "ixabepilone",
+            "nocodazole",
+            "parbendazole",
+            "plinabulin"
+        ]
+    },
+    "tubulin polymerization inhibitor-count-16_cluster_rcutoff_0.6.pdf__VS__PLK inhibitor-count-3_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [
+            "ABT-751",
+            "BNC105",
+            "CYT-997",
+            "JK-184",
+            "KX2-391",
+            "cabazitaxel",
+            "cephalomannine",
+            "combretastatin-A-4",
+            "docetaxel",
+            "dolastatin-10",
+            "epothilone-a",
+            "epothilone-b",
+            "indibulin",
+            "ispinesib",
+            "ixabepilone",
+            "litronesib",
+            "nocodazole",
+            "paclitaxel",
+            "parbendazole",
+            "plinabulin",
+            "podophyllotoxin",
+            "rigosertib",
+            "taltobulin",
+            "verubulin",
+            "vinblastine",
+            "vincristine",
+            "vindesine",
+            "vinflunine",
+            "vinorelbine"
+        ],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "BI-2536",
+            "GSK461364",
+            "volasertib"
+        ]
+    },
+    "tubulin polymerization inhibitor-count-16_cluster_rcutoff_0.6.pdf__VS__tubulin polymerization inhibitor-count-11_2_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [
+            "ABT-751",
+            "BI-2536",
+            "GSK461364",
+            "JK-184",
+            "cabazitaxel",
+            "epothilone-a",
+            "epothilone-b",
+            "indibulin",
+            "ixabepilone",
+            "nocodazole",
+            "parbendazole",
+            "plinabulin",
+            "volasertib"
+        ],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "BNC105",
+            "CYT-997",
+            "KX2-391",
+            "cephalomannine",
+            "combretastatin-A-4",
+            "docetaxel",
+            "dolastatin-10",
+            "ispinesib",
+            "litronesib",
+            "paclitaxel",
+            "podophyllotoxin",
+            "rigosertib",
+            "taltobulin",
+            "verubulin",
+            "vinblastine",
+            "vincristine",
+            "vindesine",
+            "vinflunine",
+            "vinorelbine"
+        ]
+    },
+    "Aurora kinase inhibitor-count-7_cluster_rcutoff_0.6.pdf__VS__Aurora kinase inhibitor-count-7_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [
+            "TAS-103",
+            "amsacrine",
+            "doxorubicin",
+            "idarubicin",
+            "teniposide",
+            "valrubicin",
+            "voreloxin"
+        ],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "AMG900",
+            "GSK1070916",
+            "SNS-314",
+            "TAK-901",
+            "alisertib",
+            "barasertib-HQPA",
+            "danusertib",
+            "hesperadin",
+            "tozasertib"
+        ]
+    },
+    "Aurora kinase inhibitor-count-7_cluster_rcutoff_0.6.pdf__VS__topoisomerase inhibitor-count-6_2_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [
+            "AMG900",
+            "GSK1070916",
+            "SNS-314",
+            "TAK-901",
+            "alisertib",
+            "barasertib-HQPA",
+            "danusertib",
+            "hesperadin",
+            "tozasertib"
+        ],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "TAS-103",
+            "amsacrine",
+            "doxorubicin",
+            "idarubicin",
+            "teniposide",
+            "valrubicin",
+            "voreloxin"
+        ]
+    },
+    "MEK inhibitor-count-10_cluster_rcutoff_0.6.pdf__VS__MEK inhibitor-count-10_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "AS-703026",
+            "AZD8330",
+            "MEK162",
+            "PD-0325901",
+            "PD-318088",
+            "Ro-4987655",
+            "TAK-733",
+            "cobimetinib",
+            "selumetinib",
+            "trametinib"
+        ]
+    },
+    "Aurora kinase inhibitor, JAK inhibitor-count-1_cluster_rcutoff_0.6.pdf__VS__Aurora kinase inhibitor, JAK inhibitor-count-1_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "AT-9283",
+            "R547",
+            "SKF-96365",
+            "radezolid"
+        ]
+    },
+    "HSP inhibitor-count-2_cluster_rcutoff_0.6.pdf__VS__HSP inhibitor-count-2_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "AT13387",
+            "NVP-AUY922",
+            "ganetespib"
+        ]
+    },
+    "mTOR inhibitor-count-2_cluster_rcutoff_0.6.pdf__VS__mTOR inhibitor-count-2_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "AZD2014",
+            "MLN0128",
+            "NVP-BEZ235"
+        ]
+    },
+    "mTOR inhibitor-count-5_2_cluster_rcutoff_0.6.pdf__VS__mTOR inhibitor-count-3_2_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [
+            "AZD8055",
+            "GDC-0349",
+            "PKI-179",
+            "torin-1"
+        ],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "deforolimus",
+            "everolimus",
+            "sirolimus"
+        ]
+    },
+    "EGFR inhibitor-count-9_cluster_rcutoff_0.6.pdf__VS__EGFR inhibitor-count-9_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "AZD8931",
+            "BMS-690514",
+            "XL-647",
+            "afatinib",
+            "canertinib",
+            "dacomitinib",
+            "erlotinib",
+            "gefitinib",
+            "osimertinib",
+            "pelitinib",
+            "poziotinib"
+        ]
+    },
+    "hypoxia inducible factor inhibitor-count-1_cluster_rcutoff_0.6.pdf__VS__hypoxia inducible factor inhibitor-count-1_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "BAY-87-2243",
+            "EVP4593",
+            "diphenyleneiodonium"
+        ]
+    },
+    "RAF inhibitor-count-2_cluster_rcutoff_0.6.pdf__VS__RAF inhibitor-count-2_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "CEP-32496",
+            "TAK-632",
+            "givinostat"
+        ]
+    },
+    "EGFR inhibitor-count-1_2_cluster_rcutoff_0.6.pdf__VS__EGFR inhibitor-count-1_2_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "CUDC-101",
+            "bardoxolone",
+            "serdemetan",
+            "telotristat-ethyl"
+        ]
+    },
+    "nan-count-1_cluster_rcutoff_0.6.pdf__VS__nan-count-1_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "KP-1212",
+            "MLN-8054",
+            "VTP-27999"
+        ]
+    },
+    "DNA polymerase inhibitor-count-1_cluster_rcutoff_0.6.pdf__VS__DNA polymerase inhibitor-count-1_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "adefovir-dipivoxil",
+            "fluticasone-propionate",
+            "hexylresorcinol"
+        ]
+    },
+    "glucocorticoid receptor agonist-count-2_cluster_rcutoff_0.6.pdf__VS__glucocorticoid receptor agonist-count-2_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "beclomethasone-dipropionate",
+            "betamethasone",
+            "meclizine",
+            "sulfasalazine"
+        ]
+    },
+    "cholinergic receptor antagonist-count-1_cluster_rcutoff_0.6.pdf__VS__cholinergic receptor antagonist-count-1_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "butylscopolamine-bromide",
+            "diclazuril",
+            "spironolactone",
+            "thonzonium"
+        ]
+    },
+    "steroid-count-1_cluster_rcutoff_0.6.pdf__VS__steroid-count-1_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "clocortolone-pivalate",
+            "digitoxin",
+            "levonorgestrel",
+            "mebendazole",
+            "methotrexate",
+            "practolol"
+        ]
+    },
+    "chelating agent, topoisomerase inhibitor-count-1_cluster_rcutoff_0.6.pdf__VS__chelating agent, topoisomerase inhibitor-count-1_cluster_rcutoff_0.6.pdf": {
+        "Pearson exclusive": [],
+        "Spearman exclusive": [],
+        "Intersection": [
+            "dexrazoxane",
+            "ecamsule-triethanolamine",
+            "fenoprofen"
+        ]
+    }
+}
