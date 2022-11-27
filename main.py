@@ -459,6 +459,22 @@ def get_markov_clusters(similarity_matrix, hm, inflation=2.0, expansion=2, pruni
     return (mcl_cluster_list, mcl_cluster_index_list)
 
 
+def compare_mcl_hyperparameters(similarity_matrix, hm, inflation_list, expansion_list, pruning_threshold_list):
+    mcl_clusters_list = []
+    for inflation in inflation_list:
+        for expansion in expansion_list:
+            for pruning_threshold in pruning_threshold_list:
+                mcl_cluster, _ = get_markov_clusters(similarity_matrix, hm, inflation, expansion,
+                                                  pruning_threshold)
+                mcl_supercluster = [] if mcl_cluster == [] else get_super_clustered_drugs(mcl_cluster)
+                mcl_clusters_list.append(mcl_supercluster)
+
+
+    nmi_list = compare_clusters_normalized_mutual_information(drug_label_map, mcl_clusters_list)
+
+    return (nmi_list, mcl_clusters_list)
+
+
 def get_2d_coordinates_PCA(similarity_matrix):
     pca = PCA(n_components=2)
     return pca.fit_transform(similarity_matrix)
@@ -575,9 +591,24 @@ if __name__ == '__main__':
 
     #markov_matrix = convert_to_markov_matrix(modified_similarity_matrix)
     #markov_matrix = inflate(modified_similarity_matrix, 2)
+
+    _, modified_similarity_matrix = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0)
     markov_matrix = modified_similarity_matrix
-    mcl_cluster_list, _ = get_markov_clusters(markov_matrix, hm)
-    mcl_supercluster = get_super_clustered_drugs(mcl_cluster_list)
+    mcl_cluster, _ = get_markov_clusters(markov_matrix, hm, 2, 2)
+    mcl_supercluster = get_super_clustered_drugs(mcl_cluster)
+    print('single markov cluster ready in ', timeit.default_timer() - start)
+
+    inflation_list = np.arange(1.1, 10.0, 0.1)
+    expansion_list = [2, 3, 4]
+    pruning_threshold_list = [0.001, 0.1, 0.01, 0.0001]
+    expansion_list = [2]
+    pruning_threshold_list = [0.001]
+    nmi_list, mcl_clusters_list = compare_mcl_hyperparameters(markov_matrix, hm, inflation_list, expansion_list,
+                                           pruning_threshold_list)
+    print('internal markov clustering comparison ready in ', timeit.default_timer() - start)
+
+    plt.ylim(bottom=0)
+    plt.plot(inflation_list, nmi_list)
 
     #positions = get_2d_coordinates_PCA(modified_similarity_matrix)
     #mcl.draw_graph(markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
