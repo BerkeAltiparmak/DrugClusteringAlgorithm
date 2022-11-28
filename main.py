@@ -617,6 +617,19 @@ if __name__ == '__main__':
         Q = modularity.modularity(matrix=result, clusters=clusters)
         print("inflation:", inflation, "modularity:", Q)
 
+    graph_matrix = markov_matrix
+    for i in range(0, len(markov_matrix)):
+        graph_matrix[i][i] = 0  # making the diagonal zero instead of 1s to remove self loops.
+
+    df_graph = pd.DataFrame(graph_matrix, index=hm.index, columns=hm.index)
+    G_pearson = nx.from_pandas_adjacency(df_graph)
+    G_pearson.remove_nodes_from(list(nx.isolates(G_pearson)))
+    edges = G_pearson.edges()
+    weights = [G_pearson[u][v]['weight'] for u, v in edges]
+    norm_weight = [(float(i) - min(weights) + 0.1) / (max(weights) - min(weights) + 0.1) for i in weights]
+    plt.axis("off")
+    nx.draw(G_pearson, edge_color=weights, width=[i * 5 for i in norm_weight], with_labels=True, pos=nx.spring_layout(G_pearson))
+
     #plt.ylim(bottom=0)
     #plt.plot(inflation_list, nmi_list)
 
