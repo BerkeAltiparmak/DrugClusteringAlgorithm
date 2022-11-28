@@ -17,6 +17,8 @@ from sklearn.decomposition import PCA
 import weighted_graph_creator as wgc
 import graph_visualization as gv
 
+import modularity as modularity
+
 
 def get_df() -> DataFrame:
     """
@@ -446,8 +448,8 @@ def inflate(matrix, power):
 
 
 def get_markov_clusters(similarity_matrix, hm, inflation=2.0, expansion=2, pruning_threshold=0.001):
-    result = mcl.run_mcl(similarity_matrix, inflation=inflation, expansion=expansion, pruning_threshold=pruning_threshold)
-    clusters = mcl.get_clusters(result)
+    mcl_result = mcl.run_mcl(similarity_matrix, inflation=inflation, expansion=expansion, pruning_threshold=pruning_threshold)
+    clusters = mcl.get_clusters(mcl_result)
 
     mcl_cluster_index_list = []
     mcl_cluster_list = []
@@ -456,7 +458,7 @@ def get_markov_clusters(similarity_matrix, hm, inflation=2.0, expansion=2, pruni
         mcl_cluster_index_list.append(index_list)
         mcl_cluster_list.append(list(hm.iloc[index_list].index))
 
-    return (mcl_cluster_list, mcl_cluster_index_list)
+    return (mcl_result, mcl_cluster_list, mcl_cluster_index_list)
 
 
 def compare_mcl_hyperparameters(similarity_matrix, hm, inflation_list, expansion_list, pruning_threshold_list):
@@ -464,7 +466,7 @@ def compare_mcl_hyperparameters(similarity_matrix, hm, inflation_list, expansion
     for inflation in inflation_list:
         for expansion in expansion_list:
             for pruning_threshold in pruning_threshold_list:
-                mcl_cluster, _ = get_markov_clusters(similarity_matrix, hm, inflation, expansion,
+                _, mcl_cluster, _ = get_markov_clusters(similarity_matrix, hm, inflation, expansion,
                                                   pruning_threshold)
                 mcl_supercluster = [] if mcl_cluster == [] else get_super_clustered_drugs(mcl_cluster)
                 mcl_clusters_list.append(mcl_supercluster)
@@ -511,6 +513,7 @@ if __name__ == '__main__':
     # plot_comparison(r_cutoff_list, np.divide(total_drugs, num_sets))
 
     drug_label_map = get_drug_label_map(df, useful_drug_list)
+    print('drug label map ready in ', timeit.default_timer() - start)
     # nmi_list = compare_clusters_normalized_mutual_information(drug_label_map, rcutoff_clustered_drugs_list)
     # plot_comparison(r_cutoff_list, nmi_list)
     # print('nmi comparison ready in ', timeit.default_timer() - start)
@@ -592,23 +595,30 @@ if __name__ == '__main__':
     #markov_matrix = convert_to_markov_matrix(modified_similarity_matrix)
     #markov_matrix = inflate(modified_similarity_matrix, 2)
 
-    _, modified_similarity_matrix = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0)
-    markov_matrix = modified_similarity_matrix
-    mcl_cluster, _ = get_markov_clusters(markov_matrix, hm, 2, 2)
+    _, markov_matrix = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
+    mcl_result, mcl_cluster, _ = get_markov_clusters(markov_matrix, hm, 2, 2)
     mcl_supercluster = get_super_clustered_drugs(mcl_cluster)
     print('single markov cluster ready in ', timeit.default_timer() - start)
 
     inflation_list = np.arange(1.1, 10.0, 0.1)
-    expansion_list = [2, 3, 4]
-    pruning_threshold_list = [0.001, 0.1, 0.01, 0.0001]
+    #expansion_list = [2, 3, 4]
+    #pruning_threshold_list = [0.001, 0.1, 0.01, 0.0001]
     expansion_list = [2]
     pruning_threshold_list = [0.001]
+
     nmi_list, mcl_clusters_list = compare_mcl_hyperparameters(markov_matrix, hm, inflation_list, expansion_list,
                                            pruning_threshold_list)
     print('internal markov clustering comparison ready in ', timeit.default_timer() - start)
 
-    plt.ylim(bottom=0)
-    plt.plot(inflation_list, nmi_list)
+    for i in range(15, 26):
+        inflation = i / 10
+        result = mcl.run_mcl(markov_matrix, inflation=inflation)
+        clusters = mcl.get_clusters(result)
+        Q = modularity.modularity(matrix=result, clusters=clusters)
+        print("inflation:", inflation, "modularity:", Q)
+
+    #plt.ylim(bottom=0)
+    #plt.plot(inflation_list, nmi_list)
 
     #positions = get_2d_coordinates_PCA(modified_similarity_matrix)
     #mcl.draw_graph(markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
