@@ -161,13 +161,15 @@ def get_super_clustered_drugs(clustered_drugs):
     return get_similar_drugs(super_clustered_drugs, minimum_cluster_length=3, has_outcast_cluster=False)
 
 
-def compare_r_cutoffs(corr_m, drug_list, r_cutoff_list, has_outcast_cluster_for_all=False):
+def compare_r_cutoffs(corr_m, drug_list, r_cutoff_list, has_outcast_cluster_for_all=False, want_supercluster=False):
     num_sets_list = []
     total_drugs_list = []
     rcutoff_clustered_drugs_list = []
     for r_cutoff in r_cutoff_list:
         initial_cluster, _ = get_similarity_labeling_matrix(corr_m, drug_list, r_cutoff)
         clustered_drugs = get_similar_drugs(initial_cluster, has_outcast_cluster=has_outcast_cluster_for_all)
+        if want_supercluster:
+            clustered_drugs = get_super_clustered_drugs(clustered_drugs)
         num_sets = len(clustered_drugs)
         total_drugs = len(set([item for sublist in clustered_drugs for item in sublist]))
         num_sets_list.append(num_sets)
@@ -180,7 +182,8 @@ def compare_r_cutoffs(corr_m, drug_list, r_cutoff_list, has_outcast_cluster_for_
 def get_drug_label_map(df, drug_list):
     drug_label_map = {}
     for drug_name in drug_list:
-        label = df.loc[df['name'] == drug_name, 'moa'].iloc[0]
+        label = df.iloc[(df.name.values == str(drug_name)).argmax()].moa
+        # df.loc[df['name'] == drug_name, 'moa'].iloc[0]
         drug_label_map[drug_name] = label
 
     return drug_label_map
@@ -269,6 +272,18 @@ def compare_clusters_normalized_mutual_information(drug_label_map, rcutoff_clust
         nmi_list.append(nmi)
 
     return nmi_list
+
+
+def get_drug_occurance_count(clustered_drugs):
+    drug_occurance_count = {}
+    for c in clustered_drugs:
+        for d in c:
+            if d not in drug_occurance_count:
+                drug_occurance_count[d] = 1
+            else:
+                drug_occurance_count[d] += 1
+
+    return drug_occurance_count
 
 
 def get_repeated_dataset(drug_list_in_cluster, hm):
@@ -431,6 +446,11 @@ def temp(hm, drug_label_map, clustered_drugs, path="heatmaps/",
     return filename_list
 
 
+def convert_map_to_json(python_map):
+    with open("pearson_vs_mcl_0.6-r-cutoff.json", "w") as outfile:
+        json.dump(supercluster_difference, outfile, indent=4, sort_keys=False)
+
+
 def convert_to_markov_matrix(similarity_matrix):
     return normalize(similarity_matrix, norm="l1", axis=0)
 
@@ -448,7 +468,8 @@ def inflate(matrix, power):
 
 
 def get_markov_clusters(similarity_matrix, hm, inflation=2.0, expansion=2, pruning_threshold=0.001):
-    mcl_result = mcl.run_mcl(similarity_matrix, inflation=inflation, expansion=expansion, pruning_threshold=pruning_threshold)
+    mcl_result = mcl.run_mcl(similarity_matrix, inflation=inflation, expansion=expansion,
+                             pruning_threshold=pruning_threshold)
     clusters = mcl.get_clusters(mcl_result)
 
     mcl_cluster_index_list = []
@@ -467,10 +488,27 @@ def compare_mcl_hyperparameters(similarity_matrix, hm, inflation_list, expansion
         for expansion in expansion_list:
             for pruning_threshold in pruning_threshold_list:
                 _, mcl_cluster, _ = get_markov_clusters(similarity_matrix, hm, inflation, expansion,
-                                                  pruning_threshold)
+                                                        pruning_threshold)
                 mcl_supercluster = [] if mcl_cluster == [] else get_super_clustered_drugs(mcl_cluster)
                 mcl_clusters_list.append(mcl_supercluster)
 
+    nmi_list = compare_clusters_normalized_mutual_information(drug_label_map, mcl_clusters_list)
+
+    return (nmi_list, mcl_clusters_list)
+
+
+def compare_mcl_cutoff(corr_m_pearson, useful_drug_list, hm, rcutoff_list, inflation, expansion, pruning_threshold,
+                       want_supercluster=True, has_outcast_cluster=False):
+    mcl_clusters_list = []
+    for rcutoff in rcutoff_list:
+        _, markov_matrix = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, rcutoff)
+        _, mcl_cluster, _ = get_markov_clusters(markov_matrix, hm, inflation=inflation, expansion=expansion,
+                                                         pruning_threshold=pruning_threshold)
+        if want_supercluster:
+            mcl_cluster = get_super_clustered_drugs(mcl_cluster)
+        else:
+            mcl_cluster = get_similar_drugs(mcl_cluster, has_outcast_cluster=has_outcast_cluster)
+        mcl_clusters_list.append(mcl_cluster)
 
     nmi_list = compare_clusters_normalized_mutual_information(drug_label_map, mcl_clusters_list)
 
@@ -480,6 +518,15 @@ def compare_mcl_hyperparameters(similarity_matrix, hm, inflation_list, expansion
 def get_2d_coordinates_PCA(similarity_matrix):
     pca = PCA(n_components=2)
     return pca.fit_transform(similarity_matrix)
+
+
+def get_A_vs_B(clustered_drugs_A, clustered_drugs_B):
+    superclusters_A = get_super_clustered_drugs(clustered_drugs_A)
+    superclusters_B = get_super_clustered_drugs(clustered_drugs_B)
+    filename_list_A = temp(hm, drug_label_map, superclusters_A)
+    filename_list_B = temp(hm, drug_label_map, superclusters_B)
+    return compare_superclusters(superclusters_A, superclusters_B,
+                                 filename_list_A, filename_list_B)
 
 
 if __name__ == '__main__':
@@ -507,45 +554,25 @@ if __name__ == '__main__':
     print('single correlation data ready in ', timeit.default_timer() - start)
 
     r_cutoff_list = np.arange(0.1, 0.95, 0.05)
+    # r_cutoff_list = np.arange(0.3, 0.95, 0.1)
     num_sets, total_drugs, rcutoff_clustered_drugs_list = compare_r_cutoffs(
-        corr_m_pearson, useful_drug_list, r_cutoff_list, has_outcast_cluster_for_all=False)
+        corr_m_pearson, useful_drug_list, r_cutoff_list, has_outcast_cluster_for_all=False, want_supercluster=False)
     print('multiple correlation data ready in ', timeit.default_timer() - start)
     # plot_comparison(r_cutoff_list, np.divide(total_drugs, num_sets))
 
     drug_label_map = get_drug_label_map(df, useful_drug_list)
     print('drug label map ready in ', timeit.default_timer() - start)
+
     # nmi_list = compare_clusters_normalized_mutual_information(drug_label_map, rcutoff_clustered_drugs_list)
     # plot_comparison(r_cutoff_list, nmi_list)
     # print('nmi comparison ready in ', timeit.default_timer() - start)
 
     # gmm = get_gaussian_mixture_model(hm, 30)
 
-    """
-    cluster_graph = wgc.get_weighted_graph_from_clusters(clustered_drugs, has_outcast_cluster=True)
-    gv.visualize_graph(cluster_graph)
-    """
+    # cluster_graph = wgc.get_weighted_graph_from_clusters(clustered_drugs, has_outcast_cluster=True)
+    # gv.visualize_graph(cluster_graph)
 
-    """
-    multiple_drug_occurance = {}
-    cluster_length_list = []
-    for c in clustered_drugs:
-        sum_of_drugs_in_c = 0
-        for d in c:
-            if d not in multiple_drug_occurance:
-                multiple_drug_occurance[d] = 1
-            else:
-                multiple_drug_occurance[d] += 1
-            sum_of_drugs_in_c += 1
-        cluster_length_list.append(sum_of_drugs_in_c)
-    """
-
-    """
-    r_cutoff_list = np.arange(0.3, 0.9, 0.1)
-    num_sets, total_drugs, rcutoff_clustered_drugs_list = compare_r_cutoffs(
-    corr_m, useful_drug_list, r_cutoff_list, has_outcast_cluster_for_all=False)
-    """
-
-    # silhoutte_list = compare_clusters_silhoutte(hm, rcutoff_clustered_drugs_list) #0.5<=r<=0.95, outcast=False #0.5<=r<=0.95, outcast=False
+    # silhoutte_list = compare_clusters_silhoutte(hm, rcutoff_clustered_drugs_list) #r_cutoff_list = np.arange(0.3, 0.9, 0.1), outcast=False
     # plt.plot(r_cutoff_list, silhoutte_list)
     print('silhoutte comparison ready in ', timeit.default_timer() - start)
 
@@ -556,69 +583,45 @@ if __name__ == '__main__':
     # plot_heatmaps_of_wanted_clusters(hm, drug_label_map, clustered_drugs, path="heatmaps1/")
     print('heatmaps of clusters ready in ', timeit.default_timer() - start)
 
-    """
-    initial_cluster, _ = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
-    clustered_drugs_pearson = get_similar_drugs(initial_cluster, has_outcast_cluster=False)
-    initial_cluster, _ = get_similarity_labeling_matrix(corr_m_spearman, useful_drug_list, 0.6)
-    clustered_drugs_spearman = get_similar_drugs(initial_cluster, has_outcast_cluster=False)
-    superclusters_pearson = get_super_clustered_drugs(clustered_drugs_pearson)
-    superclusters_spearman = get_super_clustered_drugs(clustered_drugs_spearman)
-    pearson_filename_list = temp(hm, drug_label_map, superclusters_pearson, path="heatmaps_pearson/",
-                                 want_super_clustered_drugs=False,
-                                 wanted_cluster_length=3, has_outcast_cluster_for_all=False)
-    spearman_filename_list = temp(hm, drug_label_map, superclusters_spearman, path="heatmaps_spearman/",
-                                  want_super_clustered_drugs=False,
-                                  wanted_cluster_length=3, has_outcast_cluster_for_all=False)
-    supercluster_comparison, supercluster_difference = \
-        compare_superclusters(superclusters_pearson, superclusters_spearman,
-                                                    pearson_filename_list, spearman_filename_list)
-    """
-    """
-        initial_cluster, _ = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
-        clustered_drugs_pearson = get_similar_drugs(initial_cluster, has_outcast_cluster=False)
-        superclusters_pearson = get_super_clustered_drugs(clustered_drugs_pearson)
-        pearson_filename_list = temp(hm, drug_label_map, superclusters_pearson, path="heatmaps_pearson/",
-                                     want_super_clustered_drugs=False,
-                                     wanted_cluster_length=3, has_outcast_cluster_for_all=False)
-        mcl_filename_list = temp(hm, drug_label_map, mcl_supercluster, path="heatmaps_mcl/",
-                                      want_super_clustered_drugs=False,
-                                      wanted_cluster_length=3, has_outcast_cluster_for_all=False)
-        supercluster_comparison, supercluster_difference = \
-            compare_superclusters(superclusters_pearson, mcl_supercluster,
-                                                        pearson_filename_list, mcl_filename_list)
-        """
-    """
-    with open("pearson_vs_mcl_0.6-r-cutoff.json", "w") as outfile:
-        json.dump(supercluster_difference, outfile, indent=4, sort_keys=False)
-    """
+    pearson_initial_cluster, _ = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
+    spearman_initial_cluster, _ = get_similarity_labeling_matrix(corr_m_spearman, useful_drug_list, 0.6)
+    p_vs_s_supercluster_comparison, p_vs_s_supercluster_difference = get_A_vs_B(pearson_initial_cluster, spearman_initial_cluster)
+    #supercluster_comparison, supercluster_difference = \
+            #compare_superclusters(superclusters_pearson, mcl_supercluster,
+                                                        #pearson_filename_list, mcl_filename_list)
 
-    #markov_matrix = convert_to_markov_matrix(modified_similarity_matrix)
-    #markov_matrix = inflate(modified_similarity_matrix, 2)
+    # markov_matrix = convert_to_markov_matrix(modified_similarity_matrix)
+    # markov_matrix = inflate(modified_similarity_matrix, 2)
 
-    _, markov_matrix = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
-    mcl_result, mcl_cluster, _ = get_markov_clusters(markov_matrix, hm, 2, 2)
+    _, pearson_matrix = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
+    mcl_result, mcl_cluster, _ = get_markov_clusters(pearson_matrix, hm, 2, 2)
+    mcl_clean_cluster = get_similar_drugs(mcl_cluster, has_outcast_cluster=True)
     mcl_supercluster = get_super_clustered_drugs(mcl_cluster)
     print('single markov cluster ready in ', timeit.default_timer() - start)
 
     inflation_list = np.arange(1.1, 10.0, 0.1)
-    #expansion_list = [2, 3, 4]
-    #pruning_threshold_list = [0.001, 0.1, 0.01, 0.0001]
+    # expansion_list = [2, 3, 4]
+    # pruning_threshold_list = [0.001, 0.1, 0.01, 0.0001]
     expansion_list = [2]
     pruning_threshold_list = [0.001]
 
-    nmi_list, mcl_clusters_list = compare_mcl_hyperparameters(markov_matrix, hm, inflation_list, expansion_list,
-                                           pruning_threshold_list)
+    nmi_mcl_param_list, mcl_param_clusters_list = compare_mcl_hyperparameters(pearson_matrix, hm, inflation_list, expansion_list,
+                                                              pruning_threshold_list)
+
+    r_cutoff_list = np.arange(0.1, 0.95, 0.05)
+    nmi_mcl_cutoff_list, mcl_cutoff_clusters_list = compare_mcl_cutoff(corr_m_pearson, useful_drug_list, hm, r_cutoff_list, 2, 2, 0.001,
+                                                                       want_supercluster=False, has_outcast_cluster=False)
     print('internal markov clustering comparison ready in ', timeit.default_timer() - start)
 
     for i in range(15, 26):
         inflation = i / 10
-        result = mcl.run_mcl(markov_matrix, inflation=inflation)
+        result = mcl.run_mcl(pearson_matrix, inflation=inflation)
         clusters = mcl.get_clusters(result)
         Q = modularity.modularity(matrix=result, clusters=clusters)
         print("inflation:", inflation, "modularity:", Q)
 
-    graph_matrix = markov_matrix
-    for i in range(0, len(markov_matrix)):
+    graph_matrix = pearson_matrix
+    for i in range(0, len(graph_matrix)):
         graph_matrix[i][i] = 0  # making the diagonal zero instead of 1s to remove self loops.
 
     df_graph = pd.DataFrame(graph_matrix, index=hm.index, columns=hm.index)
@@ -627,14 +630,14 @@ if __name__ == '__main__':
     edges = G_pearson.edges()
     weights = [G_pearson[u][v]['weight'] for u, v in edges]
     norm_weight = [(float(i) - min(weights) + 0.1) / (max(weights) - min(weights) + 0.1) for i in weights]
-    plt.axis("off")
-    nx.draw(G_pearson, edge_color=weights, width=[i * 5 for i in norm_weight], with_labels=True, pos=nx.spring_layout(G_pearson))
+    # plt.axis("off")
+    # nx.draw(G_pearson, edge_color=weights, width=[i * 5 for i in norm_weight], with_labels=True, pos=nx.spring_layout(G_pearson))
 
-    #plt.ylim(bottom=0)
-    #plt.plot(inflation_list, nmi_list)
+    # plt.ylim(bottom=0)
+    # plt.plot(inflation_list, nmi_list)
 
-    #positions = get_2d_coordinates_PCA(modified_similarity_matrix)
-    #mcl.draw_graph(markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
+    # positions = get_2d_coordinates_PCA(modified_similarity_matrix)
+    # mcl.draw_graph(markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
 
-        #print("inflation:", inflation, "modularity:", Q)
-    #mcl.draw_graph(inflated_markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
+    # print("inflation:", inflation, "modularity:", Q)
+    # mcl.draw_graph(inflated_markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
