@@ -1,0 +1,605 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+                <link href="lib/tom-select/tom-select.css" rel="stylesheet">
+                <script src="lib/tom-select/tom-select.complete.min.js"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 1300px;
+                 height: 500px;
+                 background-color: #222222;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+             #loadingBar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width: 1300px;
+                 height: 500px;
+                 background-color:rgba(200,200,200,0.8);
+                 -webkit-transition: all 0.5s ease;
+                 -moz-transition: all 0.5s ease;
+                 -ms-transition: all 0.5s ease;
+                 -o-transition: all 0.5s ease;
+                 transition: all 0.5s ease;
+                 opacity:1;
+             }
+
+             #bar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width:20px;
+                 height:20px;
+                 margin:auto auto auto auto;
+                 border-radius:11px;
+                 border:2px solid rgba(30,30,30,0.05);
+                 background: rgb(0, 173, 246); /* Old browsers */
+                 box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+             }
+
+             #border {
+                 position:absolute;
+                 top:10px;
+                 left:10px;
+                 width:500px;
+                 height:23px;
+                 margin:auto auto auto auto;
+                 box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+                 border-radius:10px;
+             }
+
+             #text {
+                 position:absolute;
+                 top:8px;
+                 left:530px;
+                 width:30px;
+                 height:50px;
+                 margin:auto auto auto auto;
+                 font-size:22px;
+                 color: #000000;
+             }
+
+             div.outerBorder {
+                 position:relative;
+                 top:400px;
+                 width:600px;
+                 height:44px;
+                 margin:auto auto auto auto;
+                 border:8px solid rgba(0,0,0,0.1);
+                 background: rgb(252,252,252); /* Old browsers */
+                 background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+                 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+                 background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+                 background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+                 background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+                 background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+                 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+                 border-radius:72px;
+                 box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+             }
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+                <div id="select-menu" class="card-header">
+                    <div class="row no-gutters">
+                        <div class="col-10 pb-2">
+                            <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            onchange="selectNode([value]);"
+                            id="select-node"
+                            placeholder="Select node..."
+                            >
+                                <option selected>Select a Node by ID</option>
+                                
+                                    <option value="10-hydroxycamptothecin">10-hydroxycamptothecin</option>
+                                
+                                    <option value="genz-644282">genz-644282</option>
+                                
+                                    <option value="irinotecan">irinotecan</option>
+                                
+                                    <option value="rubitecan">rubitecan</option>
+                                
+                                    <option value="topotecan">topotecan</option>
+                                
+                                    <option value="talazoparib">talazoparib</option>
+                                
+                                    <option value="pralatrexate">pralatrexate</option>
+                                
+                                    <option value="5-hydroxymethyl-tolterodine">5-hydroxymethyl-tolterodine</option>
+                                
+                                    <option value="7-hydroxystaurosporine">7-hydroxystaurosporine</option>
+                                
+                                    <option value="CH5132799">CH5132799</option>
+                                
+                                    <option value="R306465">R306465</option>
+                                
+                                    <option value="SR-33805">SR-33805</option>
+                                
+                                    <option value="Y-27632">Y-27632</option>
+                                
+                                    <option value="proflavine-hemisulfate">proflavine-hemisulfate</option>
+                                
+                                    <option value="lestaurtinib">lestaurtinib</option>
+                                
+                                    <option value="ABT-751">ABT-751</option>
+                                
+                                    <option value="JK-184">JK-184</option>
+                                
+                                    <option value="KX2-391">KX2-391</option>
+                                
+                                    <option value="cabazitaxel">cabazitaxel</option>
+                                
+                                    <option value="combretastatin-A-4">combretastatin-A-4</option>
+                                
+                                    <option value="epothilone-b">epothilone-b</option>
+                                
+                                    <option value="indibulin">indibulin</option>
+                                
+                                    <option value="ixabepilone">ixabepilone</option>
+                                
+                                    <option value="parbendazole">parbendazole</option>
+                                
+                                    <option value="plinabulin">plinabulin</option>
+                                
+                                    <option value="podophyllotoxin">podophyllotoxin</option>
+                                
+                                    <option value="dolastatin-10">dolastatin-10</option>
+                                
+                                    <option value="ispinesib">ispinesib</option>
+                                
+                                    <option value="vincristine">vincristine</option>
+                                
+                                    <option value="CYT-997">CYT-997</option>
+                                
+                                    <option value="nocodazole">nocodazole</option>
+                                
+                                    <option value="taltobulin">taltobulin</option>
+                                
+                                    <option value="verubulin">verubulin</option>
+                                
+                                    <option value="vinblastine">vinblastine</option>
+                                
+                                    <option value="BI-2536">BI-2536</option>
+                                
+                                    <option value="cephalomannine">cephalomannine</option>
+                                
+                                    <option value="docetaxel">docetaxel</option>
+                                
+                                    <option value="epothilone-a">epothilone-a</option>
+                                
+                                    <option value="paclitaxel">paclitaxel</option>
+                                
+                                    <option value="rigosertib">rigosertib</option>
+                                
+                                    <option value="vinflunine">vinflunine</option>
+                                
+                                    <option value="vinorelbine">vinorelbine</option>
+                                
+                                    <option value="AMG900">AMG900</option>
+                                
+                                    <option value="GSK1070916">GSK1070916</option>
+                                
+                                    <option value="SNS-314">SNS-314</option>
+                                
+                                    <option value="alisertib">alisertib</option>
+                                
+                                    <option value="barasertib-HQPA">barasertib-HQPA</option>
+                                
+                                    <option value="danusertib">danusertib</option>
+                                
+                                    <option value="tozasertib">tozasertib</option>
+                                
+                                    <option value="PHA-680632">PHA-680632</option>
+                                
+                                    <option value="TAK-901">TAK-901</option>
+                                
+                                    <option value="AT-9283">AT-9283</option>
+                                
+                                    <option value="MPI-0479605">MPI-0479605</option>
+                                
+                                    <option value="voreloxin">voreloxin</option>
+                                
+                                    <option value="PHA-793887">PHA-793887</option>
+                                
+                                    <option value="hesperadin">hesperadin</option>
+                                
+                                    <option value="AS-703026">AS-703026</option>
+                                
+                                    <option value="AZD8330">AZD8330</option>
+                                
+                                    <option value="MEK162">MEK162</option>
+                                
+                                    <option value="PD-0325901">PD-0325901</option>
+                                
+                                    <option value="PD-318088">PD-318088</option>
+                                
+                                    <option value="Ro-4987655">Ro-4987655</option>
+                                
+                                    <option value="TAK-733">TAK-733</option>
+                                
+                                    <option value="cobimetinib">cobimetinib</option>
+                                
+                                    <option value="selumetinib">selumetinib</option>
+                                
+                                    <option value="trametinib">trametinib</option>
+                                
+                                    <option value="PD-184352">PD-184352</option>
+                                
+                                    <option value="R547">R547</option>
+                                
+                                    <option value="SKF-96365">SKF-96365</option>
+                                
+                                    <option value="fdcyd">fdcyd</option>
+                                
+                                    <option value="radezolid">radezolid</option>
+                                
+                                    <option value="floxuridine">floxuridine</option>
+                                
+                                    <option value="AT13387">AT13387</option>
+                                
+                                    <option value="NVP-AUY922">NVP-AUY922</option>
+                                
+                                    <option value="ganetespib">ganetespib</option>
+                                
+                                    <option value="AZD2014">AZD2014</option>
+                                
+                                    <option value="MLN0128">MLN0128</option>
+                                
+                                    <option value="NVP-BEZ235">NVP-BEZ235</option>
+                                
+                                    <option value="AZD7762">AZD7762</option>
+                                
+                                    <option value="LY2606368">LY2606368</option>
+                                
+                                    <option value="SCH-900776">SCH-900776</option>
+                                
+                                    <option value="AZD8055">AZD8055</option>
+                                
+                                    <option value="GDC-0349">GDC-0349</option>
+                                
+                                    <option value="PKI-179">PKI-179</option>
+                                
+                                    <option value="WYE-125132">WYE-125132</option>
+                                
+                                    <option value="deforolimus">deforolimus</option>
+                                
+                                    <option value="torin-1">torin-1</option>
+                                
+                                    <option value="everolimus">everolimus</option>
+                                
+                                    <option value="sirolimus">sirolimus</option>
+                                
+                                    <option value="AZD8931">AZD8931</option>
+                                
+                                    <option value="BMS-690514">BMS-690514</option>
+                                
+                                    <option value="XL-647">XL-647</option>
+                                
+                                    <option value="afatinib">afatinib</option>
+                                
+                                    <option value="canertinib">canertinib</option>
+                                
+                                    <option value="dacomitinib">dacomitinib</option>
+                                
+                                    <option value="osimertinib">osimertinib</option>
+                                
+                                    <option value="pelitinib">pelitinib</option>
+                                
+                                    <option value="poziotinib">poziotinib</option>
+                                
+                                    <option value="erlotinib">erlotinib</option>
+                                
+                                    <option value="gefitinib">gefitinib</option>
+                                
+                                    <option value="BAY-87-2243">BAY-87-2243</option>
+                                
+                                    <option value="EVP4593">EVP4593</option>
+                                
+                                    <option value="diphenyleneiodonium">diphenyleneiodonium</option>
+                                
+                                    <option value="GSK461364">GSK461364</option>
+                                
+                                    <option value="volasertib">volasertib</option>
+                                
+                                    <option value="litronesib">litronesib</option>
+                                
+                                    <option value="BNC105">BNC105</option>
+                                
+                                    <option value="vindesine">vindesine</option>
+                                
+                                    <option value="pardoprunox">pardoprunox</option>
+                                
+                                    <option value="CEP-32496">CEP-32496</option>
+                                
+                                    <option value="TAK-632">TAK-632</option>
+                                
+                                    <option value="givinostat">givinostat</option>
+                                
+                                    <option value="CUDC-101">CUDC-101</option>
+                                
+                                    <option value="bardoxolone">bardoxolone</option>
+                                
+                                    <option value="serdemetan">serdemetan</option>
+                                
+                                    <option value="telotristat-ethyl">telotristat-ethyl</option>
+                                
+                                    <option value="K-858">K-858</option>
+                                
+                                    <option value="tetramethylthiuram-monosulfide">tetramethylthiuram-monosulfide</option>
+                                
+                                    <option value="KP-1212">KP-1212</option>
+                                
+                                    <option value="MLN-8054">MLN-8054</option>
+                                
+                                    <option value="VTP-27999">VTP-27999</option>
+                                
+                                    <option value="KPT-185">KPT-185</option>
+                                
+                                    <option value="selinexor">selinexor</option>
+                                
+                                    <option value="flubendazole">flubendazole</option>
+                                
+                                    <option value="LY3023414">LY3023414</option>
+                                
+                                    <option value="M-344">M-344</option>
+                                
+                                    <option value="SB-939">SB-939</option>
+                                
+                                    <option value="PCI-24781">PCI-24781</option>
+                                
+                                    <option value="dacinostat">dacinostat</option>
+                                
+                                    <option value="TAS-103">TAS-103</option>
+                                
+                                    <option value="amsacrine">amsacrine</option>
+                                
+                                    <option value="doxorubicin">doxorubicin</option>
+                                
+                                    <option value="teniposide">teniposide</option>
+                                
+                                    <option value="valrubicin">valrubicin</option>
+                                
+                                    <option value="idarubicin">idarubicin</option>
+                                
+                                    <option value="adefovir-dipivoxil">adefovir-dipivoxil</option>
+                                
+                                    <option value="fluticasone-propionate">fluticasone-propionate</option>
+                                
+                                    <option value="hexylresorcinol">hexylresorcinol</option>
+                                
+                                    <option value="anguidine">anguidine</option>
+                                
+                                    <option value="bruceantin">bruceantin</option>
+                                
+                                    <option value="homoharringtonine">homoharringtonine</option>
+                                
+                                    <option value="beclomethasone-dipropionate">beclomethasone-dipropionate</option>
+                                
+                                    <option value="betamethasone">betamethasone</option>
+                                
+                                    <option value="meclizine">meclizine</option>
+                                
+                                    <option value="sulfasalazine">sulfasalazine</option>
+                                
+                                    <option value="butylscopolamine-bromide">butylscopolamine-bromide</option>
+                                
+                                    <option value="thonzonium">thonzonium</option>
+                                
+                                    <option value="diclazuril">diclazuril</option>
+                                
+                                    <option value="spironolactone">spironolactone</option>
+                                
+                                    <option value="clocortolone-pivalate">clocortolone-pivalate</option>
+                                
+                                    <option value="mebendazole">mebendazole</option>
+                                
+                                    <option value="practolol">practolol</option>
+                                
+                                    <option value="digitoxin">digitoxin</option>
+                                
+                                    <option value="levonorgestrel">levonorgestrel</option>
+                                
+                                    <option value="methotrexate">methotrexate</option>
+                                
+                                    <option value="dexrazoxane">dexrazoxane</option>
+                                
+                                    <option value="ecamsule-triethanolamine">ecamsule-triethanolamine</option>
+                                
+                                    <option value="fenoprofen">fenoprofen</option>
+                                
+                                    <option value="epothilone-d">epothilone-d</option>
+                                
+                                    <option value="sangivamycin">sangivamycin</option>
+                                
+                                    <option value="raltitrexed">raltitrexed</option>
+                                
+                            </select>
+                        </div>
+                        <div class="col-2 pb-2">
+                            <button type="button" class="btn btn-primary btn-block" onclick="neighbourhoodHighlight({nodes: []});">Reset Selection</button>
+                        </div>
+                    </div>
+                </div>
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+            <div id="loadingBar">
+              <div class="outerBorder">
+                <div id="text">0%</div>
+                <div id="border">
+                  <div id="bar"></div>
+                </div>
+              </div>
+            </div>
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+                  new TomSelect("#select-node",{
+                      create: false,
+                      sortField: {
+                          field: "text",
+                          direction: "asc"
+                      }
+                  });
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "font": {"color": "white"}, "id": "10-hydroxycamptothecin", "label": "10-hydroxycamptothecin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "genz-644282", "label": "genz-644282", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "irinotecan", "label": "irinotecan", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "rubitecan", "label": "rubitecan", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "topotecan", "label": "topotecan", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "talazoparib", "label": "talazoparib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "pralatrexate", "label": "pralatrexate", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "5-hydroxymethyl-tolterodine", "label": "5-hydroxymethyl-tolterodine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "7-hydroxystaurosporine", "label": "7-hydroxystaurosporine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "CH5132799", "label": "CH5132799", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "R306465", "label": "R306465", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "SR-33805", "label": "SR-33805", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Y-27632", "label": "Y-27632", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "proflavine-hemisulfate", "label": "proflavine-hemisulfate", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "lestaurtinib", "label": "lestaurtinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ABT-751", "label": "ABT-751", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "JK-184", "label": "JK-184", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "KX2-391", "label": "KX2-391", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "cabazitaxel", "label": "cabazitaxel", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "combretastatin-A-4", "label": "combretastatin-A-4", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "epothilone-b", "label": "epothilone-b", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "indibulin", "label": "indibulin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ixabepilone", "label": "ixabepilone", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "parbendazole", "label": "parbendazole", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "plinabulin", "label": "plinabulin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "podophyllotoxin", "label": "podophyllotoxin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "dolastatin-10", "label": "dolastatin-10", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ispinesib", "label": "ispinesib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "vincristine", "label": "vincristine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "CYT-997", "label": "CYT-997", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "nocodazole", "label": "nocodazole", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "taltobulin", "label": "taltobulin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "verubulin", "label": "verubulin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "vinblastine", "label": "vinblastine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "BI-2536", "label": "BI-2536", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "cephalomannine", "label": "cephalomannine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "docetaxel", "label": "docetaxel", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "epothilone-a", "label": "epothilone-a", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "paclitaxel", "label": "paclitaxel", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "rigosertib", "label": "rigosertib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "vinflunine", "label": "vinflunine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "vinorelbine", "label": "vinorelbine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "AMG900", "label": "AMG900", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "GSK1070916", "label": "GSK1070916", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "SNS-314", "label": "SNS-314", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "alisertib", "label": "alisertib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "barasertib-HQPA", "label": "barasertib-HQPA", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "danusertib", "label": "danusertib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "tozasertib", "label": "tozasertib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "PHA-680632", "label": "PHA-680632", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "TAK-901", "label": "TAK-901", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "AT-9283", "label": "AT-9283", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "MPI-0479605", "label": "MPI-0479605", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "voreloxin", "label": "voreloxin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "PHA-793887", "label": "PHA-793887", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "hesperadin", "label": "hesperadin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "AS-703026", "label": "AS-703026", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "AZD8330", "label": "AZD8330", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "MEK162", "label": "MEK162", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "PD-0325901", "label": "PD-0325901", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "PD-318088", "label": "PD-318088", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Ro-4987655", "label": "Ro-4987655", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "TAK-733", "label": "TAK-733", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "cobimetinib", "label": "cobimetinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "selumetinib", "label": "selumetinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "trametinib", "label": "trametinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "PD-184352", "label": "PD-184352", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "R547", "label": "R547", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "SKF-96365", "label": "SKF-96365", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "fdcyd", "label": "fdcyd", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "radezolid", "label": "radezolid", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "floxuridine", "label": "floxuridine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "AT13387", "label": "AT13387", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "NVP-AUY922", "label": "NVP-AUY922", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ganetespib", "label": "ganetespib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "AZD2014", "label": "AZD2014", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "MLN0128", "label": "MLN0128", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "NVP-BEZ235", "label": "NVP-BEZ235", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "AZD7762", "label": "AZD7762", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "LY2606368", "label": "LY2606368", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "SCH-900776", "label": "SCH-900776", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "AZD8055", "label": "AZD8055", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "GDC-0349", "label": "GDC-0349", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "PKI-179", "label": "PKI-179", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "WYE-125132", "label": "WYE-125132", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "deforolimus", "label": "deforolimus", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "torin-1", "label": "torin-1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "everolimus", "label": "everolimus", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "sirolimus", "label": "sirolimus", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "AZD8931", "label": "AZD8931", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "BMS-690514", "label": "BMS-690514", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "XL-647", "label": "XL-647", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "afatinib", "label": "afatinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "canertinib", "label": "canertinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "dacomitinib", "label": "dacomitinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "osimertinib", "label": "osimertinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "pelitinib", "label": "pelitinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "poziotinib", "label": "poziotinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "erlotinib", "label": "erlotinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "gefitinib", "label": "gefitinib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "BAY-87-2243", "label": "BAY-87-2243", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "EVP4593", "label": "EVP4593", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "diphenyleneiodonium", "label": "diphenyleneiodonium", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "GSK461364", "label": "GSK461364", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "volasertib", "label": "volasertib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "litronesib", "label": "litronesib", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "BNC105", "label": "BNC105", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "vindesine", "label": "vindesine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "pardoprunox", "label": "pardoprunox", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "CEP-32496", "label": "CEP-32496", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "TAK-632", "label": "TAK-632", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "givinostat", "label": "givinostat", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "CUDC-101", "label": "CUDC-101", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "bardoxolone", "label": "bardoxolone", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "serdemetan", "label": "serdemetan", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "telotristat-ethyl", "label": "telotristat-ethyl", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "K-858", "label": "K-858", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "tetramethylthiuram-monosulfide", "label": "tetramethylthiuram-monosulfide", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "KP-1212", "label": "KP-1212", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "MLN-8054", "label": "MLN-8054", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "VTP-27999", "label": "VTP-27999", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "KPT-185", "label": "KPT-185", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "selinexor", "label": "selinexor", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "flubendazole", "label": "flubendazole", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "LY3023414", "label": "LY3023414", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "M-344", "label": "M-344", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "SB-939", "label": "SB-939", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "PCI-24781", "label": "PCI-24781", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "dacinostat", "label": "dacinostat", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "TAS-103", "label": "TAS-103", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "amsacrine", "label": "amsacrine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "doxorubicin", "label": "doxorubicin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "teniposide", "label": "teniposide", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "valrubicin", "label": "valrubicin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "idarubicin", "label": "idarubicin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "adefovir-dipivoxil", "label": "adefovir-dipivoxil", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "fluticasone-propionate", "label": "fluticasone-propionate", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "hexylresorcinol", "label": "hexylresorcinol", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "anguidine", "label": "anguidine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "bruceantin", "label": "bruceantin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "homoharringtonine", "label": "homoharringtonine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "beclomethasone-dipropionate", "label": "beclomethasone-dipropionate", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "betamethasone", "label": "betamethasone", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "meclizine", "label": "meclizine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "sulfasalazine", "label": "sulfasalazine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "butylscopolamine-bromide", "label": "butylscopolamine-bromide", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "thonzonium", "label": "thonzonium", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "diclazuril", "label": "diclazuril", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "spironolactone", "label": "spironolactone", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "clocortolone-pivalate", "label": "clocortolone-pivalate", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "mebendazole", "label": "mebendazole", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "practolol", "label": "practolol", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "digitoxin", "label": "digitoxin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "levonorgestrel", "label": "levonorgestrel", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "methotrexate", "label": "methotrexate", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "dexrazoxane", "label": "dexrazoxane", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "ecamsule-triethanolamine", "label": "ecamsule-triethanolamine", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "fenoprofen", "label": "fenoprofen", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "epothilone-d", "label": "epothilone-d", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "sangivamycin", "label": "sangivamycin", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "raltitrexed", "label": "raltitrexed", "shape": "dot", "size": 10}]);
+                  edges = new vis.DataSet([{"color": "yellow", "from": "10-hydroxycamptothecin", "title": 0.678667710238231, "to": "genz-644282", "width": 2.0786866924484766}, {"color": "green", "from": "10-hydroxycamptothecin", "title": 0.6276131364247947, "to": "irinotecan", "width": 1.614536619005381}, {"color": "red", "from": "10-hydroxycamptothecin", "title": 0.6054338088568443, "to": "rubitecan", "width": 1.412898729377687}, {"color": "white", "from": "10-hydroxycamptothecin", "title": 0.75582020553558, "to": "topotecan", "width": 2.7800995862166387}, {"color": "yellow", "from": "genz-644282", "title": 0.6346617115686248, "to": "rubitecan", "width": 1.6786170025305283}, {"color": "green", "from": "genz-644282", "title": 0.6147236870967557, "to": "talazoparib", "width": 1.4973553675446971}, {"color": "white", "from": "genz-644282", "title": 0.7372780738458248, "to": "topotecan", "width": 2.611528366387428}, {"color": "green", "from": "irinotecan", "title": 0.6080973639151562, "to": "pralatrexate", "width": 1.4371137836537808}, {"color": "yellow", "from": "irinotecan", "title": 0.7216102268696556, "to": "rubitecan", "width": 2.469087997552731}, {"color": "white", "from": "irinotecan", "title": 0.8484693372526825, "to": "topotecan", "width": 3.6223963302473323}, {"color": "green", "from": "rubitecan", "title": 0.6393347354354303, "to": "talazoparib", "width": 1.7211006471674417}, {"color": "white", "from": "rubitecan", "title": 0.8977936054370453, "to": "topotecan", "width": 4.070815756564702}, {"color": "white", "from": "topotecan", "title": 0.7503820038454521, "to": "talazoparib", "width": 2.730659516006769}, {"color": "red", "from": "5-hydroxymethyl-tolterodine", "title": 0.6408020367899907, "to": "7-hydroxystaurosporine", "width": 1.7344402557590453}, {"color": "red", "from": "5-hydroxymethyl-tolterodine", "title": 0.7268328883248403, "to": "CH5132799", "width": 2.5165685368448725}, {"color": "red", "from": "5-hydroxymethyl-tolterodine", "title": 0.6825367950504239, "to": "R306465", "width": 2.11386152333237}, {"color": "red", "from": "5-hydroxymethyl-tolterodine", "title": 0.626680080579585, "to": "SR-33805", "width": 1.6060539717764937}, {"color": "purple", "from": "5-hydroxymethyl-tolterodine", "title": 0.8631462517552452, "to": "Y-27632", "width": 3.7558278807520136}, {"color": "red", "from": "5-hydroxymethyl-tolterodine", "title": 0.6684353039668235, "to": "proflavine-hemisulfate", "width": 1.9856612930057438}, {"color": "red", "from": "7-hydroxystaurosporine", "title": 0.6883607070227309, "to": "CH5132799", "width": 2.1668081834993975}, {"color": "white", "from": "7-hydroxystaurosporine", "title": 0.7912852751199816, "to": "Y-27632", "width": 3.102521524599999}, {"color": "yellow", "from": "7-hydroxystaurosporine", "title": 0.6169284047132346, "to": "lestaurtinib", "width": 1.5173990143166667}, {"color": "red", "from": "7-hydroxystaurosporine", "title": 0.6009721428915125, "to": "proflavine-hemisulfate", "width": 1.3723365930046607}, {"color": "red", "from": "CH5132799", "title": 0.7082742663256636, "to": "R306465", "width": 2.3478473994322338}, {"color": "red", "from": "CH5132799", "title": 0.700167509118428, "to": "SR-33805", "width": 2.274146814507686}, {"color": "purple", "from": "CH5132799", "title": 0.8981079307416169, "to": "Y-27632", "width": 4.073673367593541}, {"color": "red", "from": "CH5132799", "title": 0.6549086857520305, "to": "proflavine-hemisulfate", "width": 1.8626873776661443}, {"color": "red", "from": "R306465", "title": 0.6317951925680455, "to": "SR-33805", "width": 1.6525567516016535}, {"color": "purple", "from": "R306465", "title": 0.8480132945867291, "to": "Y-27632", "width": 3.6182503307592366}, {"color": "red", "from": "R306465", "title": 0.6376981553541105, "to": "proflavine-hemisulfate", "width": 1.7062220827568189}, {"color": "purple", "from": "SR-33805", "title": 0.8312897515327445, "to": "Y-27632", "width": 3.4662123612503644}, {"color": "blue", "from": "Y-27632", "title": 1.0, "to": "lestaurtinib", "width": 5.0}, {"color": "purple", "from": "Y-27632", "title": 0.719480956890328, "to": "proflavine-hemisulfate", "width": 2.449730264376923}, {"color": "yellow", "from": "ABT-751", "title": 0.6241112146234142, "to": "JK-184", "width": 1.5826997601327106}, {"color": "yellow", "from": "ABT-751", "title": 0.6505585716448032, "to": "KX2-391", "width": 1.8231393875147894}, {"color": "purple", "from": "ABT-751", "title": 0.8041280628045191, "to": "cabazitaxel", "width": 3.219278563230363}, {"color": "green", "from": "ABT-751", "title": 0.6044418004987439, "to": "combretastatin-A-4", "width": 1.4038801299089885}, {"color": "red", "from": "ABT-751", "title": 0.613112777615871, "to": "epothilone-b", "width": 1.4827101810704142}, {"color": "yellow", "from": "ABT-751", "title": 0.7121298122278333, "to": "indibulin", "width": 2.3828991446528422}, {"color": "yellow", "from": "ABT-751", "title": 0.6180475326264518, "to": "ixabepilone", "width": 1.52757328988716}, {"color": "yellow", "from": "ABT-751", "title": 0.7010158578240673, "to": "parbendazole", "width": 2.2818593676565326}, {"color": "red", "from": "ABT-751", "title": 0.6290251479217793, "to": "plinabulin", "width": 1.6273735734851664}, {"color": "red", "from": "ABT-751", "title": 0.6294327643579058, "to": "podophyllotoxin", "width": 1.6310793178413154}, {"color": "blue", "from": "JK-184", "title": 1.0, "to": "cabazitaxel", "width": 5.0}, {"color": "green", "from": "JK-184", "title": 0.6138318615196817, "to": "combretastatin-A-4", "width": 1.4892475551357647}, {"color": "green", "from": "JK-184", "title": 0.6283329534617866, "to": "dolastatin-10", "width": 1.6210806581703399}, {"color": "red", "from": "JK-184", "title": 0.6232710844524306, "to": "epothilone-b", "width": 1.5750619237659094}, {"color": "yellow", "from": "JK-184", "title": 0.6127934069636035, "to": "indibulin", "width": 1.4798067015066199}, {"color": "green", "from": "JK-184", "title": 0.6108757877899619, "to": "ispinesib", "width": 1.4623731394611483}, {"color": "green", "from": "JK-184", "title": 0.6443713302808993, "to": "parbendazole", "width": 1.7668896077406926}, {"color": "yellow", "from": "JK-184", "title": 0.607059628636428, "to": "vincristine", "width": 1.4276794691573702}, {"color": "yellow", "from": "KX2-391", "title": 0.63266568114586, "to": "CYT-997", "width": 1.6604705839411493}, {"color": "yellow", "from": "KX2-391", "title": 0.6292064931968708, "to": "combretastatin-A-4", "width": 1.6290222293540777}, {"color": "yellow", "from": "KX2-391", "title": 0.6339893752114916, "to": "dolastatin-10", "width": 1.672504622263048}, {"color": "red", "from": "KX2-391", "title": 0.6199275467201752, "to": "nocodazole", "width": 1.5446649746177867}, {"color": "yellow", "from": "KX2-391", "title": 0.609267899067144, "to": "parbendazole", "width": 1.4477554154642467}, {"color": "red", "from": "KX2-391", "title": 0.601374502572224, "to": "plinabulin", "width": 1.3759945468646861}, {"color": "red", "from": "KX2-391", "title": 0.6080213796406293, "to": "podophyllotoxin", "width": 1.4364229913511937}, {"color": "red", "from": "KX2-391", "title": 0.6156580821047763, "to": "taltobulin", "width": 1.5058501894421916}, {"color": "yellow", "from": "KX2-391", "title": 0.6122222688539392, "to": "verubulin", "width": 1.4746143401617664}, {"color": "red", "from": "KX2-391", "title": 0.6154071775962757, "to": "vinblastine", "width": 1.503569152948315}, {"color": "purple", "from": "KX2-391", "title": 0.8028095870972556, "to": "vincristine", "width": 3.207291966327301}, {"color": "red", "from": "cabazitaxel", "title": 0.6343130080637055, "to": "BI-2536", "width": 1.6754468505670705}, {"color": "yellow", "from": "cabazitaxel", "title": 0.6154719523573757, "to": "cephalomannine", "width": 1.5041580367226013}, {"color": "red", "from": "cabazitaxel", "title": 0.6064962839518114, "to": "combretastatin-A-4", "width": 1.422557959815346}, {"color": "yellow", "from": "cabazitaxel", "title": 0.708503671651791, "to": "docetaxel", "width": 2.3499329814088723}, {"color": "red", "from": "cabazitaxel", "title": 0.6030771267582601, "to": "dolastatin-10", "width": 1.3914735349742031}, {"color": "purple", "from": "cabazitaxel", "title": 0.6630934843661874, "to": "epothilone-a", "width": 1.9370974568053823}, {"color": "white", "from": "cabazitaxel", "title": 0.7484051681127678, "to": "epothilone-b", "width": 2.7126876012109813}, {"color": "blue", "from": "cabazitaxel", "title": 1.0, "to": "indibulin", "width": 5.0}, {"color": "purple", "from": "cabazitaxel", "title": 0.6055991907565441, "to": "ixabepilone", "width": 1.414402258154018}, {"color": "blue", "from": "cabazitaxel", "title": 1.0, "to": "nocodazole", "width": 5.0}, {"color": "yellow", "from": "cabazitaxel", "title": 0.6752202485275969, "to": "paclitaxel", "width": 2.0473449440670226}, {"color": "blue", "from": "cabazitaxel", "title": 1.0, "to": "parbendazole", "width": 5.0}, {"color": "purple", "from": "cabazitaxel", "title": 0.671141010086254, "to": "plinabulin", "width": 2.0102595532642327}, {"color": "red", "from": "cabazitaxel", "title": 0.6247951311497189, "to": "podophyllotoxin", "width": 1.5889174186538302}, {"color": "red", "from": "cabazitaxel", "title": 0.6253150834027998, "to": "taltobulin", "width": 1.5936444364002975}, {"color": "yellow", "from": "cabazitaxel", "title": 0.6279236079357357, "to": "vincristine", "width": 1.6173591942193437}, {"color": "yellow", "from": "combretastatin-A-4", "title": 0.6474920591060584, "to": "CYT-997", "width": 1.7952609446298549}, {"color": "green", "from": "combretastatin-A-4", "title": 0.6618148469452497, "to": "dolastatin-10", "width": 1.925473039862759}, {"color": "green", "from": "combretastatin-A-4", "title": 0.6178517840558883, "to": "ispinesib", "width": 1.5257936900077156}, {"color": "yellow", "from": "combretastatin-A-4", "title": 0.6600762799610786, "to": "parbendazole", "width": 1.9096672866634956}, {"color": "yellow", "from": "combretastatin-A-4", "title": 0.6137644979646715, "to": "plinabulin", "width": 1.4886351359797523}, {"color": "yellow", "from": "combretastatin-A-4", "title": 0.6266634750867728, "to": "podophyllotoxin", "width": 1.6059030070316596}, {"color": "yellow", "from": "combretastatin-A-4", "title": 0.6525143721559874, "to": "rigosertib", "width": 1.840920065779256}, {"color": "yellow", "from": "combretastatin-A-4", "title": 0.6266671724708501, "to": "taltobulin", "width": 1.605936620887635}, {"color": "yellow", "from": "combretastatin-A-4", "title": 0.604541640984474, "to": "verubulin", "width": 1.4047878050754405}, {"color": "yellow", "from": "combretastatin-A-4", "title": 0.6209751534716903, "to": "vinblastine", "width": 1.554189033175832}, {"color": "white", "from": "combretastatin-A-4", "title": 0.8131441334421624, "to": "vincristine", "width": 3.301245947071866}, {"color": "yellow", "from": "combretastatin-A-4", "title": 0.6232282581907687, "to": "vinflunine", "width": 1.5746725793642045}, {"color": "green", "from": "epothilone-b", "title": 0.6124232205107819, "to": "docetaxel", "width": 1.4764412426176152}, {"color": "red", "from": "epothilone-b", "title": 0.6101659891491267, "to": "dolastatin-10", "width": 1.455920180075426}, {"color": "red", "from": "epothilone-b", "title": 0.6189661937659592, "to": "epothilone-a", "width": 1.5359250711972887}, {"color": "red", "from": "epothilone-b", "title": 0.6414017211628761, "to": "plinabulin", "width": 1.7398921384196377}, {"color": "red", "from": "indibulin", "title": 0.6011711113284874, "to": "ixabepilone", "width": 1.374145465505923}, {"color": "yellow", "from": "indibulin", "title": 0.6438685199328753, "to": "nocodazole", "width": 1.7623184313987628}, {"color": "yellow", "from": "indibulin", "title": 0.644814550924998, "to": "parbendazole", "width": 1.7709190389775809}, {"color": "red", "from": "indibulin", "title": 0.6024071319068746, "to": "plinabulin", "width": 1.3853824419290732}, {"color": "green", "from": "ixabepilone", "title": 0.6108931089072394, "to": "docetaxel", "width": 1.4625306101294147}, {"color": "green", "from": "ixabepilone", "title": 0.6059717971720966, "to": "paclitaxel", "width": 1.4177897175376968}, {"color": "yellow", "from": "ixabepilone", "title": 0.6712081878298755, "to": "parbendazole", "width": 2.0108702831618035}, {"color": "green", "from": "ixabepilone", "title": 0.6031391448881295, "to": "vincristine", "width": 1.3920373575151348}, {"color": "yellow", "from": "parbendazole", "title": 0.6325981259998457, "to": "nocodazole", "width": 1.6598564229827486}, {"color": "red", "from": "parbendazole", "title": 0.6275828099555936, "to": "plinabulin", "width": 1.6142609133857748}, {"color": "yellow", "from": "parbendazole", "title": 0.6153319036937388, "to": "taltobulin", "width": 1.502884818817576}, {"color": "yellow", "from": "parbendazole", "title": 0.6242388892341557, "to": "vincristine", "width": 1.5838604823859024}, {"color": "green", "from": "parbendazole", "title": 0.6074591333814425, "to": "vinorelbine", "width": 1.4313114680732153}, {"color": "red", "from": "plinabulin", "title": 0.601716899592088, "to": "nocodazole", "width": 1.3791073649737413}, {"color": "red", "from": "plinabulin", "title": 0.659037837773224, "to": "podophyllotoxin", "width": 1.9002265454770066}, {"color": "red", "from": "plinabulin", "title": 0.623965003179584, "to": "taltobulin", "width": 1.5813705148306147}, {"color": "red", "from": "podophyllotoxin", "title": 0.6326309801344772, "to": "CYT-997", "width": 1.6601551082495742}, {"color": "red", "from": "podophyllotoxin", "title": 0.6524220427112573, "to": "dolastatin-10", "width": 1.8400806753906678}, {"color": "red", "from": "podophyllotoxin", "title": 0.6155215892376326, "to": "taltobulin", "width": 1.50460929818452}, {"color": "white", "from": "podophyllotoxin", "title": 0.7433199661292376, "to": "vincristine", "width": 2.666456740823163}, {"color": "yellow", "from": "AMG900", "title": 0.6060310367195196, "to": "GSK1070916", "width": 1.4183282792812073}, {"color": "yellow", "from": "AMG900", "title": 0.7590669158631824, "to": "SNS-314", "width": 2.8096162528822317}, {"color": "yellow", "from": "AMG900", "title": 0.642383563305968, "to": "alisertib", "width": 1.7488183142504448}, {"color": "yellow", "from": "AMG900", "title": 0.6154845720531169, "to": "barasertib-HQPA", "width": 1.5042727655758181}, {"color": "white", "from": "AMG900", "title": 0.757892983892749, "to": "danusertib", "width": 2.7989437397341446}, {"color": "yellow", "from": "AMG900", "title": 0.666521051142992, "to": "tozasertib", "width": 1.9682583352998035}, {"color": "green", "from": "GSK1070916", "title": 0.6255993077059627, "to": "PHA-680632", "width": 1.5962283915943893}, {"color": "yellow", "from": "GSK1070916", "title": 0.6148957310343003, "to": "SNS-314", "width": 1.4989194625959759}, {"color": "green", "from": "GSK1070916", "title": 0.619580978895477, "to": "TAK-901", "width": 1.5415142386646377}, {"color": "yellow", "from": "GSK1070916", "title": 0.6228837913218036, "to": "barasertib-HQPA", "width": 1.5715409437322414}, {"color": "white", "from": "GSK1070916", "title": 0.7759250367605715, "to": "danusertib", "width": 2.962877703682482}, {"color": "green", "from": "SNS-314", "title": 0.6219797729295071, "to": "AT-9283", "width": 1.5633222833491065}, {"color": "green", "from": "SNS-314", "title": 0.6076433817840287, "to": "MPI-0479605", "width": 1.4329865170101554}, {"color": "yellow", "from": "SNS-314", "title": 0.616613348317274, "to": "alisertib", "width": 1.5145347567506704}, {"color": "yellow", "from": "SNS-314", "title": 0.7553840962122077, "to": "barasertib-HQPA", "width": 2.7761348057992725}, {"color": "white", "from": "SNS-314", "title": 0.7797686464809103, "to": "danusertib", "width": 2.9978209340481095}, {"color": "yellow", "from": "SNS-314", "title": 0.6420963723513469, "to": "tozasertib", "width": 1.7462073884758669}, {"color": "yellow", "from": "SNS-314", "title": 0.6276627859794434, "to": "voreloxin", "width": 1.6149879956934092}, {"color": "cyan", "from": "alisertib", "title": 0.8031342323983152, "to": "danusertib", "width": 3.210243399060446}, {"color": "green", "from": "alisertib", "title": 0.6168238732726932, "to": "tozasertib", "width": 1.5164486924908158}, {"color": "white", "from": "barasertib-HQPA", "title": 0.7647575742905666, "to": "danusertib", "width": 2.861351471291102}, {"color": "yellow", "from": "barasertib-HQPA", "title": 0.6277634297565843, "to": "voreloxin", "width": 1.61590297378572}, {"color": "green", "from": "danusertib", "title": 0.619962667095756, "to": "PHA-793887", "width": 1.544984262855599}, {"color": "white", "from": "danusertib", "title": 0.7765642597316859, "to": "TAK-901", "width": 2.9686890417630507}, {"color": "purple", "from": "danusertib", "title": 0.6220566575740446, "to": "hesperadin", "width": 1.5640212611437134}, {"color": "white", "from": "danusertib", "title": 0.6592606839571982, "to": "tozasertib", "width": 1.9022524966295147}, {"color": "green", "from": "danusertib", "title": 0.6000892867650389, "to": "vincristine", "width": 1.3643103241449932}, {"color": "white", "from": "AS-703026", "title": 0.8329670398803002, "to": "AZD8330", "width": 3.4814610148293372}, {"color": "white", "from": "AS-703026", "title": 0.6855362460502652, "to": "MEK162", "width": 2.1411302927662836}, {"color": "white", "from": "AS-703026", "title": 0.7873857740063879, "to": "PD-0325901", "width": 3.0670701714091972}, {"color": "white", "from": "AS-703026", "title": 0.678892376619514, "to": "PD-318088", "width": 2.0807291914761588}, {"color": "white", "from": "AS-703026", "title": 0.8179108580142737, "to": "Ro-4987655", "width": 3.3445814485748904}, {"color": "white", "from": "AS-703026", "title": 0.7763164427836979, "to": "TAK-733", "width": 2.9664360750645264}, {"color": "white", "from": "AS-703026", "title": 0.7677472982532447, "to": "cobimetinib", "width": 2.8885318097642525}, {"color": "white", "from": "AS-703026", "title": 0.7896582803421424, "to": "selumetinib", "width": 3.0877301026132997}, {"color": "white", "from": "AS-703026", "title": 0.8803710327131463, "to": "trametinib", "width": 3.9124227311148023}, {"color": "yellow", "from": "AZD8330", "title": 0.7138218065343448, "to": "MEK162", "width": 2.3982814938328074}, {"color": "yellow", "from": "AZD8330", "title": 0.7943065467445205, "to": "PD-0325901", "width": 3.12998867086481}, {"color": "yellow", "from": "AZD8330", "title": 0.6687206684999711, "to": "PD-318088", "width": 1.9882556143196881}, {"color": "yellow", "from": "AZD8330", "title": 0.8436851512855974, "to": "Ro-4987655", "width": 3.5789020827759415}, {"color": "yellow", "from": "AZD8330", "title": 0.8026224135191264, "to": "TAK-733", "width": 3.205590323877934}, {"color": "yellow", "from": "AZD8330", "title": 0.7609931622364515, "to": "cobimetinib", "width": 2.827128246986608}, {"color": "yellow", "from": "AZD8330", "title": 0.7104122038166887, "to": "selumetinib", "width": 2.3672839311541947}, {"color": "yellow", "from": "AZD8330", "title": 0.8476725514700081, "to": "trametinib", "width": 3.6151525487029366}, {"color": "yellow", "from": "MEK162", "title": 0.7105496945005901, "to": "PD-0325901", "width": 2.3685338938169678}, {"color": "green", "from": "MEK162", "title": 0.618192716859752, "to": "PD-184352", "width": 1.5288931965579171}, {"color": "yellow", "from": "MEK162", "title": 0.6306695999738324, "to": "PD-318088", "width": 1.6423237039773577}, {"color": "yellow", "from": "MEK162", "title": 0.7247268549609364, "to": "Ro-4987655", "width": 2.4974220536306233}, {"color": "yellow", "from": "MEK162", "title": 0.6723662884474767, "to": "TAK-733", "width": 2.0213988694678684}, {"color": "green", "from": "MEK162", "title": 0.6025963515174592, "to": "cobimetinib", "width": 1.3871026853781843}, {"color": "yellow", "from": "MEK162", "title": 0.618177755086323, "to": "selumetinib", "width": 1.5287571752826978}, {"color": "yellow", "from": "MEK162", "title": 0.6595357822869731, "to": "trametinib", "width": 1.9047534852859997}, {"color": "green", "from": "PD-0325901", "title": 0.6113746724263688, "to": "PD-184352", "width": 1.4669086261635553}, {"color": "yellow", "from": "PD-0325901", "title": 0.7531511905308622, "to": "PD-318088", "width": 2.7558348941836113}, {"color": "yellow", "from": "PD-0325901", "title": 0.8010429854775951, "to": "Ro-4987655", "width": 3.1912313431497097}, {"color": "yellow", "from": "PD-0325901", "title": 0.7403971304525352, "to": "TAK-733", "width": 2.6398845007147465}, {"color": "yellow", "from": "PD-0325901", "title": 0.6919264045319411, "to": "cobimetinib", "width": 2.199224843499803}, {"color": "yellow", "from": "PD-0325901", "title": 0.6983856651324777, "to": "selumetinib", "width": 2.257947619114044}, {"color": "yellow", "from": "PD-0325901", "title": 0.7812151023203885, "to": "trametinib", "width": 3.0109710307775295}, {"color": "yellow", "from": "PD-318088", "title": 0.6756125186017572, "to": "Ro-4987655", "width": 2.0509111707560628}, {"color": "green", "from": "PD-318088", "title": 0.6273433245448635, "to": "TAK-733", "width": 1.6120836908045995}, {"color": "yellow", "from": "PD-318088", "title": 0.6368657751065938, "to": "selumetinib", "width": 1.698654702908948}, {"color": "yellow", "from": "PD-318088", "title": 0.6518101341995403, "to": "trametinib", "width": 1.8345176599850013}, {"color": "green", "from": "Ro-4987655", "title": 0.6165782151789702, "to": "PD-184352", "width": 1.5142153524837072}, {"color": "yellow", "from": "Ro-4987655", "title": 0.7835887526359373, "to": "TAK-733", "width": 3.0325504875430713}, {"color": "yellow", "from": "Ro-4987655", "title": 0.7290188902827622, "to": "cobimetinib", "width": 2.5364420348202725}, {"color": "yellow", "from": "Ro-4987655", "title": 0.7415571001477892, "to": "selumetinib", "width": 2.6504300792795843}, {"color": "yellow", "from": "Ro-4987655", "title": 0.8049048048910449, "to": "trametinib", "width": 3.22634012245177}, {"color": "yellow", "from": "TAK-733", "title": 0.7000082391114182, "to": "cobimetinib", "width": 2.272698850497233}, {"color": "yellow", "from": "TAK-733", "title": 0.6760507349381951, "to": "selumetinib", "width": 2.0548951065633596}, {"color": "yellow", "from": "TAK-733", "title": 0.7732559042188945, "to": "trametinib", "width": 2.938611943091161}, {"color": "yellow", "from": "cobimetinib", "title": 0.667202792218075, "to": "selumetinib", "width": 1.974456216242366}, {"color": "yellow", "from": "cobimetinib", "title": 0.8397738477288459, "to": "trametinib", "width": 3.543343430582342}, {"color": "yellow", "from": "selumetinib", "title": 0.7256439754106256, "to": "trametinib", "width": 2.505759828139034}, {"color": "green", "from": "AT-9283", "title": 0.6044042504636693, "to": "R547", "width": 1.4035387530207721}, {"color": "purple", "from": "AT-9283", "title": 0.8011523445145312, "to": "SKF-96365", "width": 3.192225553878234}, {"color": "green", "from": "AT-9283", "title": 0.6028858596140763, "to": "fdcyd", "width": 1.389734676878069}, {"color": "red", "from": "AT-9283", "title": 0.6423458562867503, "to": "radezolid", "width": 1.7484755101795861}, {"color": "purple", "from": "R547", "title": 0.8167998559037588, "to": "SKF-96365", "width": 3.334481046736746}, {"color": "green", "from": "R547", "title": 0.6207569803925419, "to": "fdcyd", "width": 1.5522055664039793}, {"color": "purple", "from": "SKF-96365", "title": 0.7096034222280492, "to": "radezolid", "width": 2.3599310926966997}, {"color": "white", "from": "fdcyd", "title": 0.7828408531687036, "to": "floxuridine", "width": 3.025751143885574}, {"color": "white", "from": "AT13387", "title": 0.7992072160394995, "to": "NVP-AUY922", "width": 3.17454189779991}, {"color": "yellow", "from": "AT13387", "title": 0.6930669116021717, "to": "ganetespib", "width": 2.2095934824065604}, {"color": "white", "from": "NVP-AUY922", "title": 0.7954507289176387, "to": "ganetespib", "width": 3.1403907210635977}, {"color": "white", "from": "AZD2014", "title": 0.756750357786216, "to": "MLN0128", "width": 2.788555836131163}, {"color": "white", "from": "MLN0128", "title": 0.6586493322303506, "to": "NVP-BEZ235", "width": 1.8966945430962467}, {"color": "white", "from": "AZD7762", "title": 0.5778247250555498, "to": "LY2606368", "width": 1.161897549328763}, {"color": "green", "from": "LY2606368", "title": 0.6012612639725745, "to": "SCH-900776", "width": 1.3749650660480217}, {"color": "yellow", "from": "AZD8055", "title": 0.6427173825872372, "to": "GDC-0349", "width": 1.7518531499633825}, {"color": "white", "from": "AZD8055", "title": 0.6194432929324346, "to": "PKI-179", "width": 1.5402625006696886}, {"color": "green", "from": "AZD8055", "title": 0.6430466173068924, "to": "WYE-125132", "width": 1.7548463062644493}, {"color": "red", "from": "AZD8055", "title": 0.6258335889555338, "to": "deforolimus", "width": 1.598358301827155}, {"color": "purple", "from": "GDC-0349", "title": 0.6088576876672177, "to": "torin-1", "width": 1.4440260796343418}, {"color": "green", "from": "PKI-179", "title": 0.6002180167448427, "to": "deforolimus", "width": 1.365480641025878}, {"color": "white", "from": "deforolimus", "title": 0.6998232064805335, "to": "everolimus", "width": 2.2710166719420206}, {"color": "white", "from": "deforolimus", "title": 0.7139654084443361, "to": "sirolimus", "width": 2.3995870152012277}, {"color": "yellow", "from": "AZD8931", "title": 0.6238813189494307, "to": "BMS-690514", "width": 1.5806097202794027}, {"color": "yellow", "from": "AZD8931", "title": 0.627532995689693, "to": "XL-647", "width": 1.6138080392659995}, {"color": "red", "from": "AZD8931", "title": 0.6275533960867169, "to": "afatinib", "width": 1.6139935044470723}, {"color": "red", "from": "AZD8931", "title": 0.6188211035557963, "to": "canertinib", "width": 1.5346060193147082}, {"color": "white", "from": "AZD8931", "title": 0.8173424583695414, "to": "dacomitinib", "width": 3.339413983308966}, {"color": "red", "from": "AZD8931", "title": 0.6012519081641606, "to": "osimertinib", "width": 1.3748800100219292}, {"color": "yellow", "from": "AZD8931", "title": 0.6556908976552995, "to": "pelitinib", "width": 1.8697986643782236}, {"color": "yellow", "from": "AZD8931", "title": 0.7019049866671909, "to": "poziotinib", "width": 2.2899426633734703}, {"color": "yellow", "from": "BMS-690514", "title": 0.6746156947318158, "to": "XL-647", "width": 2.041848792248432}, {"color": "red", "from": "BMS-690514", "title": 0.6541958174419686, "to": "afatinib", "width": 1.8562065111392865}, {"color": "yellow", "from": "BMS-690514", "title": 0.6548166922513496, "to": "canertinib", "width": 1.8618510414300735}, {"color": "white", "from": "BMS-690514", "title": 0.8015807828309494, "to": "dacomitinib", "width": 3.1961205952266933}, {"color": "red", "from": "BMS-690514", "title": 0.6303081865061142, "to": "pelitinib", "width": 1.6390380025199773}, {"color": "yellow", "from": "BMS-690514", "title": 0.6951080150973704, "to": "poziotinib", "width": 2.228149671723963}, {"color": "red", "from": "XL-647", "title": 0.6298407225465051, "to": "afatinib", "width": 1.6347881691558324}, {"color": "red", "from": "XL-647", "title": 0.6660191725047386, "to": "canertinib", "width": 1.9636956293675976}, {"color": "white", "from": "XL-647", "title": 0.7899343974283172, "to": "dacomitinib", "width": 3.090240353042483}, {"color": "red", "from": "XL-647", "title": 0.6101878738441192, "to": "osimertinib", "width": 1.4561191393856179}, {"color": "red", "from": "XL-647", "title": 0.653114898078801, "to": "pelitinib", "width": 1.8463795991835883}, {"color": "yellow", "from": "XL-647", "title": 0.7301192585781151, "to": "poziotinib", "width": 2.546445761948988}, {"color": "red", "from": "afatinib", "title": 0.6632370523984782, "to": "canertinib", "width": 1.9384026701830384}, {"color": "white", "from": "afatinib", "title": 0.8199612945614678, "to": "dacomitinib", "width": 3.3632224870340166}, {"color": "red", "from": "afatinib", "title": 0.6380713624248721, "to": "osimertinib", "width": 1.7096150028492767}, {"color": "yellow", "from": "afatinib", "title": 0.6487144441483195, "to": "pelitinib", "width": 1.8063739569373216}, {"color": "yellow", "from": "afatinib", "title": 0.7322796660431397, "to": "poziotinib", "width": 2.5660865739009675}, {"color": "white", "from": "canertinib", "title": 0.7797597837570459, "to": "dacomitinib", "width": 2.997740360778659}, {"color": "red", "from": "canertinib", "title": 0.6182105203171314, "to": "osimertinib", "width": 1.5290550523023294}, {"color": "red", "from": "canertinib", "title": 0.659429235107713, "to": "pelitinib", "width": 1.9037848378684454}, {"color": "yellow", "from": "canertinib", "title": 0.7016598260831215, "to": "poziotinib", "width": 2.287713846352746}, {"color": "purple", "from": "dacomitinib", "title": 0.6174464682639814, "to": "erlotinib", "width": 1.5221088613914067}, {"color": "white", "from": "dacomitinib", "title": 0.6225305428915859, "to": "gefitinib", "width": 1.5683294727007069}, {"color": "white", "from": "dacomitinib", "title": 0.6854219146407463, "to": "osimertinib", "width": 2.140090876938057}, {"color": "white", "from": "dacomitinib", "title": 0.7250645356018095, "to": "pelitinib", "width": 2.500491993942618}, {"color": "white", "from": "dacomitinib", "title": 0.7947265473726967, "to": "poziotinib", "width": 3.133807003050414}, {"color": "red", "from": "osimertinib", "title": 0.6400477943403745, "to": "pelitinib", "width": 1.7275832464406926}, {"color": "yellow", "from": "osimertinib", "title": 0.6707587918033318, "to": "poziotinib", "width": 2.006784709957579}, {"color": "red", "from": "pelitinib", "title": 0.6318468303726027, "to": "erlotinib", "width": 1.6530262039736434}, {"color": "yellow", "from": "pelitinib", "title": 0.6163766182605133, "to": "gefitinib", "width": 1.5123825837909433}, {"color": "yellow", "from": "pelitinib", "title": 0.6840764865119292, "to": "poziotinib", "width": 2.127859248737911}, {"color": "red", "from": "poziotinib", "title": 0.6396877828113112, "to": "erlotinib", "width": 1.7243102903630314}, {"color": "green", "from": "poziotinib", "title": 0.6101681073318127, "to": "gefitinib", "width": 1.4559394370112078}, {"color": "white", "from": "BAY-87-2243", "title": 0.6913713941799814, "to": "EVP4593", "width": 2.194179103688809}, {"color": "white", "from": "BAY-87-2243", "title": 0.6448121758614875, "to": "diphenyleneiodonium", "width": 1.7708974466731027}, {"color": "purple", "from": "BI-2536", "title": 0.6253241510377935, "to": "GSK461364", "width": 1.5937268725687714}, {"color": "white", "from": "BI-2536", "title": 0.6342935660196527, "to": "volasertib", "width": 1.6752700980158108}, {"color": "green", "from": "volasertib", "title": 0.6114966018890287, "to": "ispinesib", "width": 1.468017117819078}, {"color": "green", "from": "volasertib", "title": 0.6087790169734183, "to": "litronesib", "width": 1.4433108644131112}, {"color": "yellow", "from": "volasertib", "title": 0.6127356002355765, "to": "rigosertib", "width": 1.4792811658874747}, {"color": "green", "from": "volasertib", "title": 0.613953864287332, "to": "vinflunine", "width": 1.4903567132255389}, {"color": "green", "from": "BNC105", "title": 0.6101381556775533, "to": "CYT-997", "width": 1.4556671389292557}, {"color": "green", "from": "BNC105", "title": 0.6031999841216413, "to": "dolastatin-10", "width": 1.3925904624104168}, {"color": "yellow", "from": "BNC105", "title": 0.6278777064518841, "to": "litronesib", "width": 1.6169418921931102}, {"color": "yellow", "from": "BNC105", "title": 0.6816758989253815, "to": "rigosertib", "width": 2.106034898412819}, {"color": "yellow", "from": "BNC105", "title": 0.8149605361472743, "to": "verubulin", "width": 3.317759324542427}, {"color": "yellow", "from": "BNC105", "title": 0.7986919347350556, "to": "vinblastine", "width": 3.16985734483164}, {"color": "purple", "from": "BNC105", "title": 0.8000512778603852, "to": "vincristine", "width": 3.1822154777926883}, {"color": "yellow", "from": "BNC105", "title": 0.7277469104327172, "to": "vindesine", "width": 2.5248781435424035}, {"color": "yellow", "from": "BNC105", "title": 0.6926270012985096, "to": "vinflunine", "width": 2.205594146313789}, {"color": "yellow", "from": "CYT-997", "title": 0.6257694649727146, "to": "dolastatin-10", "width": 1.5977753344431993}, {"color": "green", "from": "CYT-997", "title": 0.6027329695155994, "to": "ispinesib", "width": 1.3883447142334668}, {"color": "yellow", "from": "CYT-997", "title": 0.6197375051244673, "to": "rigosertib", "width": 1.5429372582935375}, {"color": "green", "from": "CYT-997", "title": 0.650218373229191, "to": "verubulin", "width": 1.8200465574743572}, {"color": "yellow", "from": "CYT-997", "title": 0.6217058236606121, "to": "vinblastine", "width": 1.5608317410963801}, {"color": "white", "from": "CYT-997", "title": 0.7512217499032152, "to": "vincristine", "width": 2.738293860302906}, {"color": "green", "from": "CYT-997", "title": 0.6081780715499973, "to": "vindesine", "width": 1.4378475172224083}, {"color": "yellow", "from": "CYT-997", "title": 0.6246697874684217, "to": "vinflunine", "width": 1.5877778874711335}, {"color": "green", "from": "dolastatin-10", "title": 0.6459768216009476, "to": "rigosertib", "width": 1.7814855363412474}, {"color": "yellow", "from": "dolastatin-10", "title": 0.6259141642341908, "to": "taltobulin", "width": 1.5990908321121597}, {"color": "yellow", "from": "dolastatin-10", "title": 0.6253827881103057, "to": "verubulin", "width": 1.5942599570601332}, {"color": "yellow", "from": "dolastatin-10", "title": 0.65159899023069, "to": "vinblastine", "width": 1.8325980966368274}, {"color": "white", "from": "dolastatin-10", "title": 0.7738974511777865, "to": "vincristine", "width": 2.944444409133774}, {"color": "green", "from": "dolastatin-10", "title": 0.6280882335739201, "to": "vindesine", "width": 1.618855847630518}, {"color": "green", "from": "dolastatin-10", "title": 0.6268630695689064, "to": "vinflunine", "width": 1.6077175710681681}, {"color": "yellow", "from": "litronesib", "title": 0.7256018537358486, "to": "docetaxel", "width": 2.5053768893153205}, {"color": "yellow", "from": "litronesib", "title": 0.8350082063742816, "to": "ispinesib", "width": 3.5000177768846448}, {"color": "yellow", "from": "litronesib", "title": 0.7062968390929025, "to": "paclitaxel", "width": 2.3298701071592958}, {"color": "green", "from": "litronesib", "title": 0.6029094138558767, "to": "pardoprunox", "width": 1.3899488144615402}, {"color": "yellow", "from": "litronesib", "title": 0.6545221596041879, "to": "rigosertib", "width": 1.859173370467408}, {"color": "yellow", "from": "litronesib", "title": 0.6217625912688232, "to": "verubulin", "width": 1.5613478298138501}, {"color": "yellow", "from": "litronesib", "title": 0.7238943867360992, "to": "vinblastine", "width": 2.4898538739586282}, {"color": "white", "from": "litronesib", "title": 0.7769973827570843, "to": "vincristine", "width": 2.9726266729884765}, {"color": "yellow", "from": "litronesib", "title": 0.7395580707529747, "to": "vindesine", "width": 2.63225639627503}, {"color": "yellow", "from": "litronesib", "title": 0.7722940661920943, "to": "vinflunine", "width": 2.9298676297528297}, {"color": "yellow", "from": "rigosertib", "title": 0.6359523728500738, "to": "ispinesib", "width": 1.6903507314372426}, {"color": "green", "from": "rigosertib", "title": 0.6012382108547076, "to": "nocodazole", "width": 1.3747554843092709}, {"color": "yellow", "from": "rigosertib", "title": 0.6173566716361805, "to": "taltobulin", "width": 1.5212924974836195}, {"color": "yellow", "from": "rigosertib", "title": 0.6739209570914921, "to": "verubulin", "width": 2.035532756236492}, {"color": "yellow", "from": "rigosertib", "title": 0.6971700720028468, "to": "vinblastine", "width": 2.2468963538061235}, {"color": "white", "from": "rigosertib", "title": 0.7524485332968603, "to": "vincristine", "width": 2.749446859137837}, {"color": "yellow", "from": "rigosertib", "title": 0.6461115220456697, "to": "vindesine", "width": 1.782710132232284}, {"color": "yellow", "from": "rigosertib", "title": 0.7063687662374899, "to": "vinflunine", "width": 2.330524015065075}, {"color": "yellow", "from": "verubulin", "title": 0.8415060163180563, "to": "vinblastine", "width": 3.5590910143509538}, {"color": "blue", "from": "verubulin", "title": 1.0, "to": "vincristine", "width": 5.0}, {"color": "yellow", "from": "verubulin", "title": 0.7539479904997076, "to": "vindesine", "width": 2.7630788046980834}, {"color": "yellow", "from": "verubulin", "title": 0.6875926650216777, "to": "vinflunine", "width": 2.1598257189605903}, {"color": "yellow", "from": "vinblastine", "title": 0.6283370226284231, "to": "docetaxel", "width": 1.621117651995811}, {"color": "yellow", "from": "vinblastine", "title": 0.6217680646086798, "to": "ispinesib", "width": 1.5613975893340397}, {"color": "yellow", "from": "vinblastine", "title": 0.6284582431536645, "to": "paclitaxel", "width": 1.622219698521539}, {"color": "white", "from": "vinblastine", "title": 0.8032944830283985, "to": "vincristine", "width": 3.2117002781638595}, {"color": "yellow", "from": "vinblastine", "title": 0.8553236113717563, "to": "vindesine", "width": 3.684710273898938}, {"color": "yellow", "from": "vinblastine", "title": 0.7883839622816825, "to": "vinflunine", "width": 3.0761449540717867}, {"color": "white", "from": "vincristine", "title": 0.7482879467987064, "to": "cephalomannine", "width": 2.711621912527935}, {"color": "white", "from": "vincristine", "title": 0.7568868846204819, "to": "docetaxel", "width": 2.789797036192553}, {"color": "white", "from": "vincristine", "title": 0.7552583926298965, "to": "ispinesib", "width": 2.774992002665218}, {"color": "white", "from": "vincristine", "title": 0.7509037973266763, "to": "paclitaxel", "width": 2.735403272825059}, {"color": "white", "from": "vincristine", "title": 0.7758070322799057, "to": "taltobulin", "width": 2.9618048950332936}, {"color": "white", "from": "vincristine", "title": 0.7443859767435144, "to": "vindesine", "width": 2.6761481135631597}, {"color": "white", "from": "vincristine", "title": 0.6981996581081575, "to": "vinflunine", "width": 2.25625658210109}, {"color": "white", "from": "vincristine", "title": 0.716479045567743, "to": "vinorelbine", "width": 2.422439127525228}, {"color": "yellow", "from": "vindesine", "title": 0.6643771066974318, "to": "docetaxel", "width": 1.9487671928313337}, {"color": "green", "from": "vindesine", "title": 0.6191536493232552, "to": "ispinesib", "width": 1.5376292771907463}, {"color": "yellow", "from": "vindesine", "title": 0.6739236686775438, "to": "paclitaxel", "width": 2.0355574079527052}, {"color": "green", "from": "vindesine", "title": 0.6006942985783696, "to": "pardoprunox", "width": 1.3698106399172403}, {"color": "yellow", "from": "vindesine", "title": 0.7792196222232011, "to": "vinflunine", "width": 2.992829615337489}, {"color": "yellow", "from": "vindesine", "title": 0.6123839374940647, "to": "vinorelbine", "width": 1.476084110753955}, {"color": "yellow", "from": "vinflunine", "title": 0.6675441755323377, "to": "docetaxel", "width": 1.9775598184968144}, {"color": "yellow", "from": "vinflunine", "title": 0.6576126099917279, "to": "ispinesib", "width": 1.8872694384042519}, {"color": "yellow", "from": "vinflunine", "title": 0.6759264649739861, "to": "paclitaxel", "width": 2.0537653368149105}, {"color": "red", "from": "vinflunine", "title": 0.6200183978767067, "to": "taltobulin", "width": 1.5454909255135973}, {"color": "yellow", "from": "vinflunine", "title": 0.6152389775513406, "to": "vinorelbine", "width": 1.5020400036992183}, {"color": "purple", "from": "CEP-32496", "title": 0.8251237199101552, "to": "TAK-632", "width": 3.410155404611465}, {"color": "purple", "from": "TAK-632", "title": 0.6633054024390481, "to": "givinostat", "width": 1.9390240577293592}, {"color": "red", "from": "CUDC-101", "title": 0.6057776456662655, "to": "bardoxolone", "width": 1.4160246369786091}, {"color": "blue", "from": "CUDC-101", "title": 1.0, "to": "serdemetan", "width": 5.0}, {"color": "white", "from": "bardoxolone", "title": 0.8628678060753066, "to": "serdemetan", "width": 3.7532964604865993}, {"color": "purple", "from": "serdemetan", "title": 0.6232570802845909, "to": "telotristat-ethyl", "width": 1.5749346083258655}, {"color": "yellow", "from": "ispinesib", "title": 0.6252026685922688, "to": "docetaxel", "width": 1.5926224448593487}, {"color": "purple", "from": "K-858", "title": 0.5500208366368426, "to": "tetramethylthiuram-monosulfide", "width": 0.9091253511177922}, {"color": "white", "from": "KP-1212", "title": 0.7026964301706187, "to": "MLN-8054", "width": 2.2971378769029065}, {"color": "white", "from": "KP-1212", "title": 0.7108093603910828, "to": "VTP-27999", "width": 2.370894582255642}, {"color": "green", "from": "KPT-185", "title": 0.627213862959346, "to": "selinexor", "width": 1.6109067227107008}, {"color": "green", "from": "nocodazole", "title": 0.6217406152096971, "to": "flubendazole", "width": 1.5611480398891588}, {"color": "red", "from": "nocodazole", "title": 0.6053223137426558, "to": "taltobulin", "width": 1.4118850990293415}, {"color": "green", "from": "LY3023414", "title": 0.6115373993945185, "to": "NVP-BEZ235", "width": 1.4683880182841094}, {"color": "green", "from": "M-344", "title": 0.6199727746181768, "to": "SB-939", "width": 1.5450761529042965}, {"color": "green", "from": "SB-939", "title": 0.6573016648388916, "to": "PCI-24781", "width": 1.8844425571917456}, {"color": "white", "from": "SB-939", "title": 0.5756559741628209, "to": "dacinostat", "width": 1.1421808851603708}, {"color": "green", "from": "SB-939", "title": 0.6090455722163364, "to": "givinostat", "width": 1.445734185701213}, {"color": "yellow", "from": "voreloxin", "title": 0.632948262589587, "to": "TAS-103", "width": 1.6630396034836268}, {"color": "yellow", "from": "voreloxin", "title": 0.6418024209688397, "to": "amsacrine", "width": 1.7435350019375326}, {"color": "green", "from": "voreloxin", "title": 0.6267690767697579, "to": "doxorubicin", "width": 1.6068630587028843}, {"color": "white", "from": "voreloxin", "title": 0.6826487667805121, "to": "teniposide", "width": 2.1148794867166876}, {"color": "yellow", "from": "voreloxin", "title": 0.6197812752883765, "to": "valrubicin", "width": 1.543335183949861}, {"color": "yellow", "from": "TAS-103", "title": 0.6372781132147387, "to": "amsacrine", "width": 1.7024033731824129}, {"color": "white", "from": "TAS-103", "title": 0.7619802936318152, "to": "teniposide", "width": 2.836102508750702}, {"color": "yellow", "from": "amsacrine", "title": 0.7141156735720494, "to": "idarubicin", "width": 2.400953113571159}, {"color": "white", "from": "amsacrine", "title": 0.7540111555511361, "to": "teniposide", "width": 2.763653054193666}, {"color": "white", "from": "teniposide", "title": 0.7774373986574288, "to": "doxorubicin", "width": 2.9766269690874574}, {"color": "blue", "from": "teniposide", "title": 1.0, "to": "idarubicin", "width": 5.0}, {"color": "white", "from": "teniposide", "title": 0.6995675157885323, "to": "valrubicin", "width": 2.268692123040589}, {"color": "purple", "from": "adefovir-dipivoxil", "title": 0.724225980135507, "to": "fluticasone-propionate", "width": 2.4928684736152777}, {"color": "purple", "from": "adefovir-dipivoxil", "title": 0.69804039678894, "to": "hexylresorcinol", "width": 2.2548086970735595}, {"color": "red", "from": "fluticasone-propionate", "title": 0.6552449962099736, "to": "hexylresorcinol", "width": 1.8657448612977645}, {"color": "green", "from": "anguidine", "title": 0.6126137518555915, "to": "bruceantin", "width": 1.478173411375105}, {"color": "green", "from": "anguidine", "title": 0.6127899458324536, "to": "homoharringtonine", "width": 1.4797752354859008}, {"color": "white", "from": "bruceantin", "title": 0.6141814191652343, "to": "homoharringtonine", "width": 1.4924254723082533}, {"color": "purple", "from": "beclomethasone-dipropionate", "title": 0.8166446905141118, "to": "betamethasone", "width": 3.333070398843305}, {"color": "purple", "from": "betamethasone", "title": 0.6322669207479487, "to": "meclizine", "width": 1.6568453520735194}, {"color": "purple", "from": "betamethasone", "title": 0.620380938361417, "to": "sulfasalazine", "width": 1.5487868729681642}, {"color": "red", "from": "meclizine", "title": 0.613058246611031, "to": "sulfasalazine", "width": 1.4822144258811945}, {"color": "purple", "from": "butylscopolamine-bromide", "title": 0.812408123039563, "to": "thonzonium", "width": 3.2945546899149702}, {"color": "purple", "from": "thonzonium", "title": 0.8109144695182569, "to": "diclazuril", "width": 3.2809755070949125}, {"color": "purple", "from": "thonzonium", "title": 0.8366561181920595, "to": "spironolactone", "width": 3.5149993609841297}, {"color": "yellow", "from": "cephalomannine", "title": 0.6430079473291161, "to": "docetaxel", "width": 1.7544947476932138}, {"color": "yellow", "from": "cephalomannine", "title": 0.6676845764513921, "to": "paclitaxel", "width": 1.9788362388451406}, {"color": "yellow", "from": "docetaxel", "title": 0.8371716553029057, "to": "paclitaxel", "width": 3.5196862395532524}, {"color": "blue", "from": "clocortolone-pivalate", "title": 1.0, "to": "mebendazole", "width": 5.0}, {"color": "red", "from": "clocortolone-pivalate", "title": 0.6170956115088991, "to": "practolol", "width": 1.5189191336848444}, {"color": "cyan", "from": "mebendazole", "title": 0.8294527207613804, "to": "digitoxin", "width": 3.449511448800058}, {"color": "white", "from": "mebendazole", "title": 0.833407134711044, "to": "levonorgestrel", "width": 3.4854620285045885}, {"color": "white", "from": "mebendazole", "title": 0.7237149145772084, "to": "methotrexate", "width": 2.4882222470639537}, {"color": "white", "from": "mebendazole", "title": 0.7595033124058774, "to": "practolol", "width": 2.8135836444832734}, {"color": "yellow", "from": "practolol", "title": 0.6761187875991114, "to": "levonorgestrel", "width": 2.0555137905558594}, {"color": "yellow", "from": "everolimus", "title": 0.6380263469435221, "to": "sirolimus", "width": 1.7092057556963969}, {"color": "purple", "from": "dexrazoxane", "title": 0.6552877398572432, "to": "ecamsule-triethanolamine", "width": 1.8661334546310853}, {"color": "purple", "from": "dexrazoxane", "title": 0.6233278827790228, "to": "fenoprofen", "width": 1.5755782917519698}, {"color": "red", "from": "ecamsule-triethanolamine", "title": 0.6204914986489736, "to": "fenoprofen", "width": 1.5497920045706102}, {"color": "red", "from": "diclazuril", "title": 0.651921972632181, "to": "spironolactone", "width": 1.8355344115284309}, {"color": "yellow", "from": "digitoxin", "title": 0.7437156346193753, "to": "methotrexate", "width": 2.67005386337339}, {"color": "yellow", "from": "methotrexate", "title": 0.6315973981259368, "to": "levonorgestrel", "width": 1.6507585521853416}, {"color": "yellow", "from": "doxorubicin", "title": 0.6559987706208708, "to": "valrubicin", "width": 1.8725976155574697}, {"color": "purple", "from": "epothilone-d", "title": 0.5634183046934386, "to": "sangivamycin", "width": 1.0309251296282138}, {"color": "yellow", "from": "floxuridine", "title": 0.7007939515820163, "to": "raltitrexed", "width": 2.2798419617543346}, {"color": "white", "from": "raltitrexed", "title": 0.7590450737613041, "to": "pralatrexate", "width": 2.809417680796839}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+                    network.on("selectNode", neighbourhoodHighlight);
+                  
+
+                  
+
+
+                  
+                      network.on("stabilizationProgress", function(params) {
+                          document.getElementById('loadingBar').removeAttribute("style");
+                          var maxWidth = 496;
+                          var minWidth = 20;
+                          var widthFactor = params.iterations/params.total;
+                          var width = Math.max(minWidth,maxWidth * widthFactor);
+                          document.getElementById('bar').style.width = width + 'px';
+                          document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+                      });
+                      network.once("stabilizationIterationsDone", function() {
+                          document.getElementById('text').innerHTML = '100%';
+                          document.getElementById('bar').style.width = '496px';
+                          document.getElementById('loadingBar').style.opacity = 0;
+                          // really clean the dom element
+                          setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+                      });
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

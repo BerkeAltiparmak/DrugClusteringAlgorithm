@@ -13,6 +13,7 @@ import json
 import markov_clustering as mcl
 import networkx as nx
 from sklearn.decomposition import PCA
+from pyvis.network import Network
 
 import weighted_graph_creator as wgc
 import graph_visualization as gv
@@ -446,9 +447,9 @@ def temp(hm, drug_label_map, clustered_drugs, path="heatmaps/",
     return filename_list
 
 
-def convert_map_to_json(python_map):
-    with open("pearson_vs_mcl_0.6-r-cutoff.json", "w") as outfile:
-        json.dump(supercluster_difference, outfile, indent=4, sort_keys=False)
+def convert_map_to_json(python_map, filename="pearson_vs_mcl_0.6-r-cutoff.json"):
+    with open(filename, "w") as outfile:
+        json.dump(python_map, outfile, indent=4, sort_keys=False)
 
 
 def convert_to_markov_matrix(similarity_matrix):
@@ -503,7 +504,7 @@ def compare_mcl_cutoff(corr_m_pearson, useful_drug_list, hm, rcutoff_list, infla
     for rcutoff in rcutoff_list:
         _, markov_matrix = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, rcutoff)
         _, mcl_cluster, _ = get_markov_clusters(markov_matrix, hm, inflation=inflation, expansion=expansion,
-                                                         pruning_threshold=pruning_threshold)
+                                                pruning_threshold=pruning_threshold)
         if want_supercluster:
             mcl_cluster = get_super_clustered_drugs(mcl_cluster)
         else:
@@ -585,15 +586,17 @@ if __name__ == '__main__':
 
     pearson_initial_cluster, _ = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
     spearman_initial_cluster, _ = get_similarity_labeling_matrix(corr_m_spearman, useful_drug_list, 0.6)
-    p_vs_s_supercluster_comparison, p_vs_s_supercluster_difference = get_A_vs_B(pearson_initial_cluster, spearman_initial_cluster)
-    #supercluster_comparison, supercluster_difference = \
-            #compare_superclusters(superclusters_pearson, mcl_supercluster,
-                                                        #pearson_filename_list, mcl_filename_list)
+    p_vs_s_supercluster_comparison, p_vs_s_supercluster_difference = get_A_vs_B(pearson_initial_cluster,
+                                                                                spearman_initial_cluster)
+    # supercluster_comparison, supercluster_difference = \
+    # compare_superclusters(superclusters_pearson, mcl_supercluster,
+    # pearson_filename_list, mcl_filename_list)
 
     # markov_matrix = convert_to_markov_matrix(modified_similarity_matrix)
     # markov_matrix = inflate(modified_similarity_matrix, 2)
 
     _, pearson_matrix = get_similarity_labeling_matrix(corr_m_pearson, useful_drug_list, 0.6)
+    _, spearman_matrix = get_similarity_labeling_matrix(corr_m_spearman, useful_drug_list, 0.6)
     mcl_result, mcl_cluster, _ = get_markov_clusters(pearson_matrix, hm, 2, 2)
     mcl_clean_cluster = get_similar_drugs(mcl_cluster, has_outcast_cluster=True)
     mcl_supercluster = get_super_clustered_drugs(mcl_cluster)
@@ -605,34 +608,70 @@ if __name__ == '__main__':
     expansion_list = [2]
     pruning_threshold_list = [0.001]
 
-    nmi_mcl_param_list, mcl_param_clusters_list = compare_mcl_hyperparameters(pearson_matrix, hm, inflation_list, expansion_list,
-                                                              pruning_threshold_list)
+    nmi_mcl_param_list, mcl_param_clusters_list = compare_mcl_hyperparameters(pearson_matrix, hm, inflation_list,
+                                                                              expansion_list,
+                                                                              pruning_threshold_list)
 
     r_cutoff_list = np.arange(0.1, 0.95, 0.05)
-    nmi_mcl_cutoff_list, mcl_cutoff_clusters_list = compare_mcl_cutoff(corr_m_pearson, useful_drug_list, hm, r_cutoff_list, 2, 2, 0.001,
-                                                                       want_supercluster=False, has_outcast_cluster=False)
+    nmi_mcl_cutoff_list, mcl_cutoff_clusters_list = compare_mcl_cutoff(corr_m_pearson, useful_drug_list, hm,
+                                                                       r_cutoff_list, 2, 2, 0.001,
+                                                                       want_supercluster=False,
+                                                                       has_outcast_cluster=False)
     print('internal markov clustering comparison ready in ', timeit.default_timer() - start)
 
+    """
     for i in range(15, 26):
         inflation = i / 10
         result = mcl.run_mcl(pearson_matrix, inflation=inflation)
         clusters = mcl.get_clusters(result)
         Q = modularity.modularity(matrix=result, clusters=clusters)
         print("inflation:", inflation, "modularity:", Q)
+    """
 
-    graph_matrix = pearson_matrix
-    for i in range(0, len(graph_matrix)):
-        graph_matrix[i][i] = 0  # making the diagonal zero instead of 1s to remove self loops.
+    for i in range(0, len(pearson_matrix)):
+        pearson_matrix[i][i] = 0  # making the diagonal zero instead of 1s to remove self loops.
+    for i in range(0, len(mcl_result)):
+        mcl_result[i][i] = 0  # making the diagonal zero instead of 1s to remove self loops.
+    for i in range(0, len(mcl_result)):
+        spearman_matrix[i][i] = 0  # making the diagonal zero instead of 1s to remove self loops.
 
+    graph_matrix = (pearson_matrix + mcl_result + spearman_matrix) / \
+                   (np.ceil(pearson_matrix) + np.ceil(mcl_result) + np.ceil(spearman_matrix) +
+                    ((np.ceil(pearson_matrix) + np.ceil(mcl_result) + np.ceil(spearman_matrix)) == 0) * 1)
     df_graph = pd.DataFrame(graph_matrix, index=hm.index, columns=hm.index)
-    G_pearson = nx.from_pandas_adjacency(df_graph)
-    G_pearson.remove_nodes_from(list(nx.isolates(G_pearson)))
-    edges = G_pearson.edges()
-    weights = [G_pearson[u][v]['weight'] for u, v in edges]
+    G_mcl = nx.from_pandas_adjacency(pd.DataFrame(mcl_result, index=hm.index, columns=hm.index))
+    G_pearson = nx.from_pandas_adjacency(pd.DataFrame(pearson_matrix, index=hm.index, columns=hm.index))
+    G_spearman = nx.from_pandas_adjacency(pd.DataFrame(spearman_matrix, index=hm.index, columns=hm.index))
+    G_comp = nx.from_pandas_adjacency(df_graph)
+    G_comp.remove_nodes_from(list(nx.isolates(G_comp)))
+    edges = list(G_comp.edges())
+    mcl_edges = list(G_mcl.edges())
+    pearson_edges = list(G_pearson.edges())
+    spearman_edges = list(G_spearman.edges())
+    weights = [G_comp[u][v]['weight'] for u, v in edges]
+    color_scheme = [
+        [['black', 'red'], ['blue', 'purple']],  # 000 is impossible, 001 is red, 010 is blue, 011 is purple
+        [['green', 'yellow'], ['cyan', 'white']]  # 100 is green, 101 is yellow, 110 is cyan, 111 is black
+    ]
+    colors = [color_scheme[(u, v) in spearman_edges]
+              [(u, v) in mcl_edges]
+              [(u, v) in pearson_edges] for u, v in edges]  # 1xx is spearman, x1x is mcl, xx1 is person
     norm_weight = [(float(i) - min(weights) + 0.1) / (max(weights) - min(weights) + 0.1) for i in weights]
+    # G_comp.remove_nodes_from(edges)
+    # G_comp.add_edges_from(edges, weight=weights, color=colors)
+    G_comp2 = nx.from_pandas_adjacency(pd.DataFrame())
+    for i in range(0, len(edges)):
+        u, v = edges[i]
+        G_comp2.add_edge(u, v, color=colors[i], weight=norm_weight[i] * 5, title=weights[i])
     # plt.axis("off")
-    # nx.draw(G_pearson, edge_color=weights, width=[i * 5 for i in norm_weight], with_labels=True, pos=nx.spring_layout(G_pearson))
+    # matplotlib.use("Agg")
+    # f = plt.figure()
+    # nx.draw(G_comp, edge_color=colors, width=[i * 5 for i in norm_weight], with_labels=True, pos=nx.spring_layout(G_comp), ax=f.add_subplot(111))
+    # f.savefig("markov_vs_pearson_0.6.png")
 
+    nt = Network('500px', '1300px', bgcolor="#222222", font_color="white", select_menu=True)
+    nt.from_nx(G_comp2, show_edge_weights=True)
+    nt.show('nx4.html')
     # plt.ylim(bottom=0)
     # plt.plot(inflation_list, nmi_list)
 
