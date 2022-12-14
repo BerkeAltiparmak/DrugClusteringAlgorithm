@@ -608,15 +608,15 @@ if __name__ == '__main__':
     expansion_list = [2]
     pruning_threshold_list = [0.001]
 
-    nmi_mcl_param_list, mcl_param_clusters_list = compare_mcl_hyperparameters(pearson_matrix, hm, inflation_list,
-                                                                              expansion_list,
-                                                                              pruning_threshold_list)
+    #nmi_mcl_param_list, mcl_param_clusters_list = compare_mcl_hyperparameters(pearson_matrix, hm, inflation_list,
+    #                                                                          expansion_list,
+    #                                                                          pruning_threshold_list)
 
     r_cutoff_list = np.arange(0.1, 0.95, 0.05)
-    nmi_mcl_cutoff_list, mcl_cutoff_clusters_list = compare_mcl_cutoff(corr_m_pearson, useful_drug_list, hm,
-                                                                       r_cutoff_list, 2, 2, 0.001,
-                                                                       want_supercluster=False,
-                                                                       has_outcast_cluster=False)
+    #nmi_mcl_cutoff_list, mcl_cutoff_clusters_list = compare_mcl_cutoff(corr_m_pearson, useful_drug_list, hm,
+    #                                                                   r_cutoff_list, 2, 2, 0.001,
+    #                                                                  want_supercluster=False,
+    #                                                                  has_outcast_cluster=False)
     print('internal markov clustering comparison ready in ', timeit.default_timer() - start)
 
     """
@@ -671,7 +671,7 @@ if __name__ == '__main__':
 
     nt = Network('500px', '1300px', bgcolor="#222222", font_color="white", select_menu=True)
     nt.from_nx(G_comp2, show_edge_weights=True)
-    nt.show('nx4.html')
+    # nt.show('nx4.html')
     # plt.ylim(bottom=0)
     # plt.plot(inflation_list, nmi_list)
 
@@ -680,3 +680,27 @@ if __name__ == '__main__':
 
     # print("inflation:", inflation, "modularity:", Q)
     # mcl.draw_graph(inflated_markov_matrix, mcl_cluster_list, pos=positions, node_size=50, with_labels=False, edge_color="silver")
+
+    different_edges = [e for e in spearman_edges if e not in pearson_edges]
+    pearson_r_list = []
+    spearman_r_list = []
+    for drug1, drug2 in different_edges:
+        drug1 = 'PD-184352'
+        drug2 = 'Ro-4987655'
+        x = list(hm.loc[drug1])
+        y = list(hm.loc[drug2])
+        drug1_index = list(hm.index).index(drug1)  # get drug1 index
+        drug2_index = list(hm.index).index(drug2)  # get drug2 index
+        pearson_r = corr_m_pearson[drug1_index][drug2_index]
+        spearman_r = corr_m_spearman[drug1_index][drug2_index]
+        pearson_r_list.append(pearson_r)
+        spearman_r_list.append(spearman_r)
+        """
+        plt.title(drug1 + ' vs ' + drug2 + '. Pearson R:' + str(pearson_r)[0:4] + ' , Spearman R:' + str(spearman_r)[0:4])
+        plt.xlabel(drug1)
+        plt.ylabel(drug2)
+        plt.scatter(x, y, alpha=0.6, c='black')
+        plt.plot([min(min(x), min(y)), 1], [min(min(x), min(y)), 1], c='blue')  # plot y=x
+        plt.plot(np.unique(x), np.poly1d(np.polyfit(x, y, 1))(np.unique(x)), c='red')  # plot best fit line
+        """
+
